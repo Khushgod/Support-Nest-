@@ -9,7 +9,11 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "accuracy": "vitest run src/lib/__tests__/accuracy.test.ts --reporter=verbose"
+    "accuracy": "vitest run src/lib/__tests__/accuracy.test.ts --reporter=verbose",
+    "walkthrough:capture": "tsx walkthrough/scripts/capture.ts",
+    "walkthrough:html": "tsx walkthrough/scripts/build-html.ts",
+    "walkthrough:pdf": "tsx walkthrough/scripts/build-pdf.ts",
+    "walkthrough": "npm run walkthrough:capture && npm run walkthrough:html && npm run walkthrough:pdf"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -34,7 +38,9 @@
     "@vitest/ui": "^4.1.5",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "playwright": "^1.55.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.1.5"
   }

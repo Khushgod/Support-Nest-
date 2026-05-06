@@ -1,0 +1,207 @@
+{
+  "capturedAt": "2026-05-06T11:04:28.706Z",
+  "baseUrl": "http://localhost:3179",
+  "user": {
+    "email": "walkthrough-e28073@supportnest.test"
+  },
+  "shots": [
+    {
+      "slug": "01-home",
+      "path": "/",
+      "auth": false,
+      "bytes": 562572
+    },
+    {
+      "slug": "02-register",
+      "path": "/register",
+      "auth": false,
+      "bytes": 52469
+    },
+    {
+      "slug": "03-login",
+      "path": "/login",
+      "auth": false,
+      "bytes": 35307
+    },
+    {
+      "slug": "04-about",
+      "path": "/about",
+      "auth": false,
+      "bytes": 212056
+    },
+    {
+      "slug": "05-privacy",
+      "path": "/privacy",
+      "auth": false,
+      "bytes": 228863
+    },
+    {
+      "slug": "06-community",
+      "path": "/community",
+      "auth": false,
+      "bytes": 452706
+    },
+    {
+      "slug": "07-community-space",
+      "path": "/community/first-steps",
+      "auth": false,
+      "bytes": 184847
+    },
+    {
+      "slug": "08-community-thread",
+      "path": "/community/first-steps/seed-thread-1",
+      "auth": false,
+      "bytes": 160160
+    },
+    {
+      "slug": "09-community-search-empty",
+      "path": "/community/search",
+      "auth": false,
+      "bytes": 111359
+    },
+    {
+      "slug": "10-community-search-results",
+      "path": "/community/search?q=morning",
+      "auth": false,
+      "bytes": 141053
+    },
+    {
+      "slug": "11-community-new",
+      "path": "/community/new",
+      "auth": true,
+      "bytes": 166865
+    },
+    {
+      "slug": "12-community-me",
+      "path": "/community/me",
+      "auth": true,
+      "bytes": 83220
+    },
+    {
+      "slug": "13-resources",
+      "path": "/resources",
+      "auth": false,
+      "bytes": 209790
+    },
+    {
+      "slug": "14-resources-parents",
+      "path": "/resources/parents",
+      "auth": false,
+      "bytes": 237404
+    },
+    {
+      "slug": "15-resources-teachers",
+      "path": "/resources/teachers",
+      "auth": false,
+      "bytes": 203452
+    },
+    {
+      "slug": "16-resources-nd-adults",
+      "path": "/resources/neurodivergent-adults",
+      "auth": false,
+      "bytes": 204541
+    },
+    {
+      "slug": "17-resources-healthcare",
+      "path": "/resources/healthcare",
+      "auth": false,
+      "bytes": 174171
+    },
+    {
+      "slug": "18-tools",
+      "path": "/tools",
+      "auth": false,
+      "bytes": 214838
+    },
+    {
+      "slug": "19-tools-plain-language",
+      "path": "/tools/plain-language",
+      "auth": false,
+      "bytes": 153366
+    },
+    {
+      "slug": "20-tools-iep-companion",
+      "path": "/tools/iep-companion",
+      "auth": false,
+      "bytes": 140942
+    },
+    {
+      "slug": "21-tools-iep-companion-step4",
+      "path": "/tools/iep-companion",
+      "auth": false,
+      "bytes": 188291
+    },
+    {
+      "slug": "22-tools-regulation",
+      "path": "/tools/regulation-toolkit",
+      "auth": false,
+      "bytes": 129730
+    },
+    {
+      "slug": "23-tools-regulation-breathe",
+      "path": "/tools/regulation-toolkit",
+      "auth": false,
+      "bytes": 115073
+    },
+    {
+      "slug": "24-tools-sensory",
+      "path": "/tools/sensory-planner",
+      "auth": false,
+      "bytes": 364717
+    },
+    {
+      "slug": "25-genetranslate",
+      "path": "/tools/genetranslate",
+      "auth": false,
+      "bytes": 327505
+    },
+    {
+      "slug": "26-analyze",
+      "path": "/analyze",
+      "auth": false,
+      "bytes": 221071
+    },
+    {
+      "slug": "27-manual-input",
+      "path": "/manual-input",
+      "auth": false,
+      "bytes": 117344
+    },
+    {
+      "slug": "28-genetranslate-faq",
+      "path": "/faq",
+      "auth": false,
+      "bytes": 133161
+    },
+    {
+      "slug": "29-genetranslate-about",
+      "path": "/tools/genetranslate/about",
+      "auth": false,
+      "bytes": 231966
+    },
+    {
+      "slug": "30-genetranslate-privacy",
+      "path": "/tools/genetranslate/privacy",
+      "auth": false,
+      "bytes": 207389
+    },
+    {
+      "slug": "31-genetranslate-resources",
+      "path": "/tools/genetranslate/resources",
+      "auth": false,
+      "bytes": 280758
+    },
+    {
+      "slug": "32-dashboard",
+      "path": "/dashboard?welcome=1",
+      "auth": true,
+      "bytes": 136425
+    },
+    {
+      "slug": "33-not-found",
+      "path": "/this-page-does-not-exist",
+      "auth": false,
+      "bytes": 74708
+    }
+  ]
+}
