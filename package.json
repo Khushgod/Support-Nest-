@@ -12,7 +12,9 @@
     "accuracy": "vitest run src/lib/__tests__/accuracy.test.ts --reporter=verbose"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
+    "jose": "^6.2.3",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^1.8.0",
@@ -20,10 +22,12 @@
     "ollama": "^0.6.3",
     "pdfjs-dist": "^4.10.38",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

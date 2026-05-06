@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { ChevronDown, ArrowRight } from "lucide-react";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 
 export const metadata = {
   title: "FAQ | GeneTranslate",
@@ -22,7 +20,7 @@ const FAQS: QA[] = [
         only in your browser&rsquo;s session storage. ClinVar lookups are the
         one outbound network call (to NCBI), and they only contain gene names
         and variant identifiers, never anything from your file.{" "}
-        <Link href="/privacy" className="text-sky-700 font-medium hover:underline">
+        <Link href="/tools/genetranslate/privacy" className="text-sky-700 font-medium hover:underline">
           Read the data lifecycle &rarr;
         </Link>
       </>
@@ -97,7 +95,7 @@ const FAQS: QA[] = [
         and MUTYH trigger an elevated safety mode. Quantitative lifetime risk
         estimates are removed and a banner routes you back to a counselor.
         These are conversations a clinician should have with you, not a tool.{" "}
-        <Link href="/about" className="text-sky-700 font-medium hover:underline">
+        <Link href="/tools/genetranslate/about" className="text-sky-700 font-medium hover:underline">
           More on the safety layer &rarr;
         </Link>
       </>
@@ -140,10 +138,7 @@ const FAQS: QA[] = [
 
 export default function FaqPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-
-      <main className="flex-1">
+    <main className="flex-1">
         <section className="pt-12 pb-6 sm:pt-16">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-sky-700 mb-3">
@@ -156,7 +151,7 @@ export default function FaqPage() {
               Answers to the questions we hear most. If something isn&rsquo;t
               covered, the{" "}
               <Link
-                href="/resources"
+                href="/tools/genetranslate/resources"
                 className="text-sky-700 font-medium hover:underline"
               >
                 resources page
@@ -196,7 +191,7 @@ export default function FaqPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                href="/resources"
+                href="/tools/genetranslate/resources"
                 className="text-sm text-sky-700 hover:text-sky-800 font-medium"
               >
                 Browse resources &rarr;
@@ -204,9 +199,6 @@ export default function FaqPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </main>
   );
 }

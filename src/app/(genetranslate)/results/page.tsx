@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import ProgressSteps from "@/components/ui/ProgressSteps";
 import SummarySection from "@/components/results/SummarySection";
 import VariantCard from "@/components/results/VariantCard";
@@ -33,21 +31,16 @@ export default function ResultsPage() {
 
   if (!result) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse-gentle text-slate-500">
-            Loading results...
-          </div>
-        </main>
-      </div>
+      <main className="flex-1 flex items-center justify-center">
+        <div className="animate-pulse-gentle text-slate-500">
+          Loading results...
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-
+    <>
       <main className="flex-1 pb-20">
         {/* Top bar */}
         <section className="pt-8 pb-4">
@@ -109,8 +102,7 @@ export default function ResultsPage() {
         </section>
       </main>
 
-      <Footer />
       <ExportBar result={result} />
-    </div>
+    </>
   );
 }

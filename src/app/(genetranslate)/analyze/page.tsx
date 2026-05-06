@@ -10,8 +10,6 @@ import {
   MessageSquare,
   PenLine,
 } from "lucide-react";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import DropZone from "@/components/upload/DropZone";
 import FilePreview from "@/components/upload/FilePreview";
 import ContextForm from "@/components/upload/ContextForm";
@@ -58,10 +56,7 @@ export default function AnalyzePage() {
         : 2;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-
-      <main className="flex-1">
+    <main className="flex-1">
         {/* Hero */}
         <section className="pt-12 pb-6 sm:pt-16 sm:pb-8">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
@@ -197,9 +192,6 @@ export default function AnalyzePage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </main>
   );
 }

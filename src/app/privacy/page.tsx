@@ -1,135 +1,161 @@
 import Link from "next/link";
-import { Lock, FileX, Database, Cpu, Mail, Cookie } from "lucide-react";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import { Lock, Database, KeyRound, Cookie, Trash2, Eye } from "lucide-react";
+import Shell from "@/components/supportnest/Shell";
+import PageHeader from "@/components/supportnest/PageHeader";
 
 export const metadata = {
-  title: "Privacy & data lifecycle | GeneTranslate",
+  title: "Privacy & Security | SupportNest",
   description:
-    "What GeneTranslate does and does not store. PDFs are in-memory only, results live in browser sessionStorage, and the LLM runs locally.",
+    "How SupportNest protects you: HTTPS / HSTS in transit, AES-256-GCM at rest, no ads, no tracking, no sale of data.",
 };
 
-const GUARANTEES = [
+const COMMITMENTS = [
   {
-    icon: FileX,
-    title: "PDFs are in-memory only",
-    desc: "Uploaded PDFs are read into memory by the API route, parsed once, and discarded when the request returns. They are never written to disk and never persisted in any database.",
+    icon: Lock,
+    title: "Encrypted in transit",
+    body: (
+      <>
+        Every page is served over HTTPS with HSTS{" "}
+        <code className="px-1 py-0.5 bg-cream-100 rounded text-[11px]">
+          max-age=63072000; includeSubDomains; preload
+        </code>
+        , a strict Content-Security-Policy, and modern transport ciphers.
+        Session cookies are HttpOnly, Secure, and SameSite=Lax.
+      </>
+    ),
+  },
+  {
+    icon: KeyRound,
+    title: "Encrypted at rest",
+    body: (
+      <>
+        Anything you opt to save (uploaded files, generated reports) is sealed
+        with AES-256-GCM. Each record gets a unique 96-bit IV and a key derived
+        from a server master key via HKDF&#8209;SHA256, scoped to your user ID
+        and record ID. Tampering breaks decryption.
+      </>
+    ),
   },
   {
     icon: Database,
-    title: "Results live only in your browser",
-    desc: "Analysis results are written to your browser's sessionStorage. They are gone when you close the tab. There is no server-side copy.",
-  },
-  {
-    icon: Cpu,
-    title: "The LLM runs on your machine",
-    desc: "GeneTranslate uses Ollama to run the language model locally. Prompts, your patient context, and the model's output never leave the host. There is no cloud LLM call.",
-  },
-  {
-    icon: Mail,
-    title: "Email addresses are not retained",
-    desc: "If you choose to email yourself a copy of your results, the address is passed through to Resend for delivery and is not retained by GeneTranslate, server-side or client-side, after the send completes.",
+    title: "Minimal data, scoped access",
+    body: (
+      <>
+        We collect only what we need to run your account: your name, email,
+        role, and a salted-bcrypt password hash. There is no behavioral
+        analytics database. There is no advertising audience.
+      </>
+    ),
   },
   {
     icon: Cookie,
-    title: "No accounts, no cookies, no analytics",
-    desc: "We don't ask you to register. We don't set cookies. We don't run analytics, tracking pixels, or session replay. There is nothing to opt out of because there is nothing collected.",
+    title: "No ad tracking, no third-party pixels",
+    body: (
+      <>
+        SupportNest does not run ads, marketing pixels, session replay, or
+        cross-site trackers. The only cookie we set is your session cookie.
+        Your browsing inside the nest is private to you.
+      </>
+    ),
+  },
+  {
+    icon: Trash2,
+    title: "Delete anything, any time",
+    body: (
+      <>
+        You can delete a saved file with one click and your account in two.
+        Deletes are propagated through our store within 24 hours and removed
+        from encrypted backups within 30 days.
+      </>
+    ),
+  },
+  {
+    icon: Eye,
+    title: "We never sell or rent your data",
+    body: (
+      <>
+        Period. We don&rsquo;t share data with advertisers, brokers, or AI
+        training pipelines. The only third parties involved are infrastructure
+        providers (e.g. hosting, email-on-request) under strict
+        data-processing agreements.
+      </>
+    ),
   },
 ];
 
 export default function PrivacyPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
+    <Shell>
+      <section className="py-14 sm:py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <PageHeader
+            eyebrow="Privacy & Security"
+            title="Your data is treated like family."
+            subtitle="Concrete, technical commitments — not marketing copy. If anything below stops being true, we'll tell you in a banner before we change it."
+          />
+        </div>
+      </section>
 
-      <main className="flex-1">
-        <section className="pt-12 pb-6 sm:pt-16">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-sky-700 mb-3">
-              Privacy
-            </p>
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-              Ephemeral by design
-            </h1>
-            <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-              Genetic information is deeply personal. GeneTranslate is built so
-              there is nothing for us to leak, sell, or hand over &mdash; we
-              don&rsquo;t keep your data. Here&rsquo;s exactly what happens
-              when you use the product.
-            </p>
-          </div>
-        </section>
-
-        <section className="py-10">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-4">
-            {GUARANTEES.map((g) => (
-              <div
-                key={g.title}
-                className="bg-white rounded-2xl border border-sage-200 p-6 flex gap-4"
-              >
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                  <g.icon className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-slate-900 mb-1.5">
-                    {g.title}
-                  </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    {g.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="py-10 bg-sage-50/50 border-y border-sage-200">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <Lock className="w-5 h-5 text-sky-600" />
-              The one outbound network call
-            </h2>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              When the analyzer enriches your report, it queries the public
-              NCBI ClinVar archive over HTTPS using gene names and variant
-              identifiers (for example,{" "}
-              <code className="px-1 py-0.5 bg-white rounded text-xs">BRCA1 c.5266dupC</code>
-              ). Patient names, addresses, dates of birth, your uploaded PDF
-              text, and your patient context are never included. ClinVar is
-              the same public database your lab and counselor consult.
-            </p>
-          </div>
-        </section>
-
-        <section className="py-12">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <h2 className="text-xl font-semibold text-slate-900 mb-3">
-              In short
-            </h2>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              If you close this tab, your data is gone. If our servers vanish
-              tomorrow, no copy of your report exists anywhere we control.
-              That is the design.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
-              <Link
-                href="/analyze"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold transition-colors"
-              >
-                Analyze a report
-              </Link>
-              <Link
-                href="/about"
-                className="text-sm text-sky-700 hover:text-sky-800 font-medium"
-              >
-                See the full pipeline &rarr;
-              </Link>
+      <section className="pb-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+          {COMMITMENTS.map(({ icon: Icon, title, body }) => (
+            <div
+              key={title}
+              className="rounded-3xl bg-white border border-cream-200 p-6"
+            >
+              <span className="inline-flex w-10 h-10 rounded-xl bg-lavender-50 items-center justify-center mb-4">
+                <Icon className="w-5 h-5 text-lavender-600" />
+              </span>
+              <h3 className="text-base font-semibold text-slate-900">
+                {title}
+              </h3>
+              <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                {body}
+              </p>
             </div>
-          </div>
-        </section>
-      </main>
+          ))}
+        </div>
+      </section>
 
-      <Footer />
-    </div>
+      <section className="py-12 bg-white border-y border-cream-200">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <h2 className="text-xl font-semibold text-slate-900">
+            About GeneTranslate specifically
+          </h2>
+          <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+            GeneTranslate is local-first. Genetic-test PDFs are processed in
+            memory and discarded as soon as the request returns; the language
+            model runs on your machine via Ollama; nothing about your case is
+            sent to a cloud LLM. Read the{" "}
+            <Link
+              href="/tools/genetranslate/privacy"
+              className="font-medium text-coral-600 hover:text-coral-700 underline"
+            >
+              GeneTranslate data lifecycle
+            </Link>{" "}
+            for the exact pipeline.
+          </p>
+        </div>
+      </section>
+
+      <section className="py-12">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <h2 className="text-xl font-semibold text-slate-900">
+            Reporting a security issue
+          </h2>
+          <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+            We welcome responsible disclosure. Email{" "}
+            <a
+              className="font-medium text-coral-600 hover:text-coral-700 underline"
+              href="mailto:security@supportnest.example"
+            >
+              security@supportnest.example
+            </a>{" "}
+            with reproduction steps. We&rsquo;ll acknowledge within 2 business
+            days and credit you in our security notes if you&rsquo;d like.
+          </p>
+        </div>
+      </section>
+    </Shell>
   );
 }

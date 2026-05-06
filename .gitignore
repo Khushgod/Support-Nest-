@@ -42,3 +42,6 @@ next-env.d.ts
 
 # claude code per-developer config
 /.claude/
+
+# SupportNest local data store (encrypted vault + dev users.json)
+/.data/

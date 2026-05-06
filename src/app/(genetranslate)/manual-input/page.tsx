@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import ProgressSteps from "@/components/ui/ProgressSteps";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -90,10 +88,7 @@ export default function ManualInputPage() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-
-      <main className="flex-1">
+    <main className="flex-1">
         <section className="pt-8 pb-4">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
             <Link
@@ -305,9 +300,6 @@ export default function ManualInputPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </main>
   );
 }
