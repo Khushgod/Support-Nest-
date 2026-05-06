@@ -164,6 +164,50 @@ function stripCodeFences(text: string): string {
   return trimmed.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
 }
 
+/**
+ * Generate freeform text (no JSON-mode constraint). Use this for tools whose
+ * output is naturally prose, such as the plain-language translator.
+ *
+ * Same retry / timeout semantics as `generateJson`. Output is returned as-is
+ * (no fence-stripping or parsing).
+ */
+export async function generateText(
+  args: GenerateJsonArgs
+): Promise<string> {
+  const model = args.model ?? OLLAMA_MODEL;
+  const timeoutMs = args.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const baseRequest = {
+    model,
+    options: {
+      temperature: args.temperature ?? 0.3,
+      num_predict: args.maxTokens ?? 2048,
+    },
+    messages: [
+      { role: "system", content: args.system },
+      { role: "user", content: args.user },
+    ],
+  };
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await chatWithTimeout(baseRequest, timeoutMs);
+      return (response.message?.content ?? "").trim();
+    } catch (err) {
+      lastError = err;
+      if (attempt < MAX_ATTEMPTS) {
+        await sleep(500 * Math.pow(3, attempt - 1));
+      }
+    }
+  }
+
+  const message =
+    lastError instanceof Error ? lastError.message : String(lastError);
+  throw new OllamaUnavailableError(
+    `Ollama failed after ${MAX_ATTEMPTS} attempts: ${message}`
+  );
+}
+
 /** Quick health check used by the analyze route to give a friendlier error. */
 export async function ensureModelAvailable(
   model: string = OLLAMA_MODEL

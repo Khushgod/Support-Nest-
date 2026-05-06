@@ -55,7 +55,7 @@ export default async function DashboardPage({ searchParams }: SearchProps) {
     {
       icon: Wrench,
       title: "Use a free tool",
-      desc: "GeneTranslate and more — privacy-first by default.",
+      desc: "GeneTranslate, Plain-Language Translator, IEP Companion, Regulation Toolkit.",
       href: "/tools",
       color: "bg-cream-100 text-slate-700",
     },
