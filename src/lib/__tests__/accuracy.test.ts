@@ -225,12 +225,10 @@ describe("Extraction accuracy harness (spec §7.4 — ≥95% target)", () => {
       fn: s.falseNegatives,
       "field acc": `${(s.fieldAccuracy * 100).toFixed(1)}%`,
     }));
-    // eslint-disable-next-line no-console
     console.table(rows);
 
     const avgFieldAcc =
       scores.reduce((a, s) => a + s.fieldAccuracy, 0) / scores.length;
-    // eslint-disable-next-line no-console
     console.log(`\nCorpus average field accuracy: ${(avgFieldAcc * 100).toFixed(2)}%`);
 
     // Hard gates.

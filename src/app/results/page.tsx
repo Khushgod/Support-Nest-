@@ -17,20 +17,19 @@ import Link from "next/link";
 
 export default function ResultsPage() {
   const router = useRouter();
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [result] = useState<AnalysisResult | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const stored = sessionStorage.getItem("genetranslate_result");
+      return stored ? (JSON.parse(stored) as AnalysisResult) : null;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("genetranslate_result");
-    if (stored) {
-      try {
-        setResult(JSON.parse(stored));
-      } catch {
-        router.push("/");
-      }
-    } else {
-      router.push("/");
-    }
-  }, [router]);
+    if (!result) router.push("/analyze");
+  }, [result, router]);
 
   if (!result) {
     return (
@@ -54,7 +53,7 @@ export default function ResultsPage() {
         <section className="pt-8 pb-4">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
             <Link
-              href="/"
+              href="/analyze"
               className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-sky-600 transition-colors mb-6"
             >
               <ArrowLeft className="w-4 h-4" />

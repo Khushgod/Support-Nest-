@@ -3,6 +3,14 @@
 import Link from "next/link";
 import { Dna } from "lucide-react";
 
+const NAV = [
+  { href: "/analyze", label: "Analyze", showSm: true },
+  { href: "/manual-input", label: "Manual Entry", showSm: true },
+  { href: "/resources", label: "Resources", showSm: false },
+  { href: "/faq", label: "FAQ", showSm: false },
+  { href: "/about", label: "About", showSm: false },
+];
+
 export default function Header() {
   return (
     <header className="w-full border-b border-sage-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
@@ -15,19 +23,16 @@ export default function Header() {
             Gene<span className="text-sky-600">Translate</span>
           </span>
         </Link>
-        <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm">
-          <Link
-            href="/"
-            className="text-slate-600 hover:text-sky-700 transition-colors font-medium hidden sm:block"
-          >
-            Upload Report
-          </Link>
-          <Link
-            href="/manual-input"
-            className="text-slate-600 hover:text-sky-700 transition-colors font-medium"
-          >
-            Manual Entry
-          </Link>
+        <nav className="flex items-center gap-3 sm:gap-5 text-xs sm:text-sm">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`text-slate-600 hover:text-sky-700 transition-colors font-medium ${item.showSm ? "" : "hidden md:block"}`}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
       </div>
     </header>

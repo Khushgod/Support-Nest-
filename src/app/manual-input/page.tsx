@@ -97,7 +97,7 @@ export default function ManualInputPage() {
         <section className="pt-8 pb-4">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
             <Link
-              href="/"
+              href="/analyze"
               className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-sky-600 transition-colors mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
