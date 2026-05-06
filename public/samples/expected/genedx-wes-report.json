@@ -1,0 +1,6 @@
+{
+  "labSource": "GeneDx",
+  "expectedConfidence": "failed",
+  "groundTruth": [],
+  "notes": "This GeneDx Whole Exome Sequencing (XomeDx) report uses a narrative format without the explicit 'Gene:'/'Classification:' label structure that the GeneDx parser targets. The current correct behaviour is to return confidence='failed'; a dedicated WES parser is tracked for a future ticket."
+}

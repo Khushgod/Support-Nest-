@@ -1,0 +1,14 @@
+{
+  "labSource": "Invitae",
+  "expectedConfidence": "high",
+  "groundTruth": [
+    {
+      "gene": "BRIP1",
+      "acmgClassification": "Pathogenic",
+      "hgvsCoding": "c.1343G>A",
+      "hgvsProtein": "p.Trp448*",
+      "zygosity": "Heterozygous"
+    }
+  ],
+  "notes": "Verified against PDF text 2026-04-25. The full HGVS uses the Invitae bare-c. form (no transcript prefix) which is normal for Invitae result tables."
+}

@@ -15,9 +15,9 @@ import type { LabExtractionResult } from "./index";
  * (next ~12 lines) for the structured fields.
  */
 
-const HGVS_CODING = /(?:NM_\d+\.\d+:)?c\.\S+/;
+const HGVS_CODING = /(?:NM_\d+\.\d+:)?c\.[A-Za-z0-9_+\-*>]+/;
 const HGVS_WITH_TRANSCRIPT = /NM_\d+\.\d+/;
-const HGVS_PROTEIN = /p\.\(?[A-Za-z]{3}\d+[A-Za-z*=]+\)?/;
+const HGVS_PROTEIN_INNER = /p\.[A-Za-z]{3}\d+[A-Za-z*=0-9]+/;
 const CLASS_WORDS =
   /\b(Pathogenic|Likely\s*Pathogenic|Uncertain\s*Significance|VUS|Likely\s*Benign|Benign)\b/i;
 const ZYGOSITY = /\b(Heterozygous|Homozygous|Hemizygous)\b/i;
@@ -55,7 +55,7 @@ export function extractGeneDx(rawText: string): LabExtractionResult {
 
     const coding = window.match(HGVS_CODING);
     const transcript = window.match(HGVS_WITH_TRANSCRIPT);
-    const prot = window.match(HGVS_PROTEIN);
+    const prot = window.match(HGVS_PROTEIN_INNER);
     const zyg = window.match(ZYGOSITY);
     const inh = window.match(INHERITANCE);
 

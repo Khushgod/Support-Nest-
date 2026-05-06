@@ -1,0 +1,6 @@
+{
+  "labSource": "Invitae",
+  "expectedConfidence": "high",
+  "groundTruth": [],
+  "notes": "Negative result — the report explicitly says RESULT: NEGATIVE and contains no clinically significant variants. Zero variants is the correct extraction."
+}

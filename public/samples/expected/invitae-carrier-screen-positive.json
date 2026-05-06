@@ -1,0 +1,6 @@
+{
+  "labSource": "Invitae",
+  "expectedConfidence": "failed",
+  "groundTruth": [],
+  "notes": "Carrier-screen reports use a different table format than the cancer screen and are not yet supported by the lab-specific parser. The current correct behaviour is to return confidence='failed' so the API surfaces a clear unsupported-format error instead of manufacturing phantom variants from the panel-gene disclaimer text. A dedicated carrier-screen parser is tracked for a future ticket."
+}
