@@ -1,26 +1,116 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-sage-50: #f6f7f4;
+  --color-sage-100: #e8ebe3;
+  --color-sage-200: #d4d9cb;
+  --color-sage-300: #b5bdaa;
+  --color-sage-400: #95a085;
+  --color-sage-500: #7a876a;
+  --color-sage-600: #6b7c5e;
+  --color-sage-700: #546148;
+  --color-sage-800: #3d4a34;
+  --color-sage-900: #2d3726;
+
+  --color-sky-50: #f0f7fd;
+  --color-sky-100: #e0f0fa;
+  --color-sky-200: #b8ddf4;
+  --color-sky-300: #7ec3eb;
+  --color-sky-400: #4ba9de;
+  --color-sky-500: #3b8fc2;
+  --color-sky-600: #2a73a3;
+  --color-sky-700: #1e6fa0;
+  --color-sky-800: #1b5a7e;
+  --color-sky-900: #1a4b69;
+
+  --color-warm-50: #fdf8f3;
+  --color-warm-100: #f5ead8;
+  --color-warm-200: #ebdabd;
+  --color-warm-300: #ddc397;
+  --color-warm-400: #d0a96e;
+  --color-warm-500: #c4913a;
+  --color-warm-600: #a87830;
+  --color-warm-700: #8c6028;
+  --color-warm-800: #704c20;
+  --color-warm-900: #5c3e1b;
+
+  --color-rose-50: #fef2f2;
+  --color-rose-100: #fde3e3;
+  --color-rose-200: #fccbcb;
+  --color-rose-300: #f8a5a5;
+  --color-rose-400: #f17272;
+  --color-rose-500: #d94f4f;
+  --color-rose-600: #c53a3a;
+  --color-rose-700: #b33a3a;
+  --color-rose-800: #8c2f2f;
+  --color-rose-900: #752c2c;
+
+  --color-green-50: #eefbf3;
+  --color-green-100: #dcf5e7;
+  --color-green-200: #b5eacd;
+  --color-green-300: #7fd9ab;
+  --color-green-400: #4ac085;
+  --color-green-500: #2a8c4a;
+  --color-green-600: #1e7a3d;
+  --color-green-700: #186132;
+  --color-green-800: #164d29;
+  --color-green-900: #134023;
+
+  --color-slate-50: #f8f9fa;
+  --color-slate-100: #f0f1f3;
+  --color-slate-200: #e2e4e8;
+  --color-slate-300: #cdd0d5;
+  --color-slate-400: #9da2ac;
+  --color-slate-500: #6c7483;
+  --color-slate-600: #64748b;
+  --color-slate-700: #475569;
+  --color-slate-800: #334155;
+  --color-slate-900: #1a1e2e;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--color-sage-50);
+    color: var(--color-slate-900);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: var(--color-sky-200);
+    color: var(--color-sky-900);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .animate-pulse-gentle {
+    animation: pulseGentle 2s ease-in-out infinite;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGentle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
