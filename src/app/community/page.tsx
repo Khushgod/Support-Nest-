@@ -1,67 +1,31 @@
 import Link from "next/link";
 import {
-  MessageCircle,
+  PlusCircle,
+  Search,
+  Sparkles,
   HeartHandshake,
   CalendarDays,
-  Users,
-  ArrowRight,
-  PlusCircle,
-  Sparkles,
+  Bookmark,
 } from "lucide-react";
 import Shell from "@/components/supportnest/Shell";
 import PageHeader from "@/components/supportnest/PageHeader";
+import ThreadCard from "@/components/forum/ThreadCard";
+import { TagChip } from "@/components/forum/AudienceChips";
 import { getCurrentUser } from "@/lib/auth/dal";
+import {
+  bookmarksForUser,
+  listSpaceStats,
+  listThreads,
+  listTrendingTags,
+} from "@/lib/forum/store";
+import { SPACES } from "@/lib/forum/types";
+import { timeAgo } from "@/lib/forum/format";
 
 export const metadata = {
   title: "Community | SupportNest",
   description:
-    "A thoughtful, audience-tagged community forum for parents, teachers, and neurodivergent people. Gentle moderation. No ads, no doomscrolling.",
+    "A thoughtful, audience-tagged community forum for parents, teachers, and neurodivergent people. Gentle moderation. No ads.",
 };
-
-const SPACES = [
-  {
-    title: "First steps & introductions",
-    desc: "Say hi at your own pace. No pressure, no scripts.",
-    threads: 412,
-    members: 4830,
-    accent: "from-coral-200 to-sun-200",
-  },
-  {
-    title: "Parenting little ones (0–8)",
-    desc: "Routines, regulation, sensory needs, school transitions.",
-    threads: 1248,
-    members: 6312,
-    accent: "from-sun-200 to-cream-200",
-  },
-  {
-    title: "Tweens & teens",
-    desc: "Friendships, identity, school, executive-function support.",
-    threads: 822,
-    members: 4014,
-    accent: "from-lavender-200 to-coral-200",
-  },
-  {
-    title: "Adults: workplace & life",
-    desc: "Accommodations, burnout, masking, mental-health peers.",
-    threads: 1584,
-    members: 7220,
-    accent: "from-cream-200 to-lavender-200",
-  },
-  {
-    title: "Educators' lounge",
-    desc: "Classroom strategies, IEP wins, school-system venting.",
-    threads: 932,
-    members: 2810,
-    accent: "from-lavender-200 to-sun-200",
-  },
-  {
-    title: "Healthcare & genetics",
-    desc: "Decoding evaluations, genetic testing, finding clinicians.",
-    threads: 318,
-    members: 1490,
-    accent: "from-sun-200 to-coral-200",
-  },
-];
 
 const PRINCIPLES = [
   "Lead with kindness — assume good faith.",
@@ -72,153 +36,248 @@ const PRINCIPLES = [
   "Hate, harassment, and hard-sell self-promotion get removed.",
 ];
 
-export default async function CommunityPage() {
+export default async function CommunityHubPage() {
   const user = await getCurrentUser();
+  const [recent, pinned, trending, stats] = await Promise.all([
+    listThreads({ limit: 6, sort: "latest", pinnedFirst: false }),
+    listThreads({ limit: 3, sort: "newest", pinnedFirst: true }).then((r) => ({
+      ...r,
+      items: r.items.filter((t) => t.isPinned),
+    })),
+    listTrendingTags(10),
+    listSpaceStats(),
+  ]);
+  const userBookmarks = user ? new Set(
+    (await bookmarksForUser(user.id)).map((b) => b.threadId)
+  ) : new Set<string>();
 
   return (
     <Shell>
-      <section className="relative py-14 sm:py-20 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-10 items-end">
+      {/* Hero */}
+      <section className="relative py-10 sm:py-14 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-[1.4fr_1fr] gap-10 items-end">
           <div>
             <PageHeader
               eyebrow="Community"
               title="A forum that feels like a friend's living room."
-              subtitle="Share what's hard, ask what you need, celebrate what worked. Threads are tagged by audience so the right people see them, and our small mod team keeps things kind."
+              subtitle="Threads are tagged by audience so the right people see them. Mods keep things kind. New members welcome — the only rule is be soft with each other."
             />
-            <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              {user ? (
-                <Link
-                  href="/community/new"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-coral-500 hover:bg-coral-600 text-white text-sm font-semibold transition-colors"
-                >
-                  <PlusCircle className="w-4 h-4" /> Start a thread
-                </Link>
-              ) : (
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-coral-500 hover:bg-coral-600 text-white text-sm font-semibold transition-colors"
-                >
-                  Join free to post
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              )}
+            <div className="mt-7 flex flex-col sm:flex-row gap-3 flex-wrap">
               <Link
-                href="/events"
+                href="/community/new"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-coral-500 hover:bg-coral-600 text-white text-sm font-semibold transition-colors"
+              >
+                <PlusCircle className="w-4 h-4" />
+                {user ? "Start a thread" : "Join free to post"}
+              </Link>
+              <Link
+                href="/community/search"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white hover:bg-cream-50 border border-cream-200 text-slate-800 text-sm font-semibold transition-colors"
               >
-                <CalendarDays className="w-4 h-4" /> See upcoming events
+                <Search className="w-4 h-4" /> Search threads
               </Link>
+              <Link
+                href="/events"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white hover:bg-cream-50 border border-cream-200 text-slate-700 text-sm font-medium transition-colors"
+              >
+                <CalendarDays className="w-4 h-4" /> Upcoming events
+              </Link>
+              {user && (
+                <Link
+                  href="/community/me"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white hover:bg-cream-50 border border-cream-200 text-slate-700 text-sm font-medium transition-colors"
+                >
+                  <Bookmark className="w-4 h-4" /> Your activity
+                </Link>
+              )}
             </div>
           </div>
-          <div className="rounded-3xl bg-white border border-cream-200 p-6 grid grid-cols-3 gap-4 text-center">
-            <Stat label="Active members" value="12k+" icon={Users} />
-            <Stat label="Threads / week" value="900+" icon={MessageCircle} />
-            <Stat
-              label="Welcomed by mods"
-              value="100%"
-              icon={HeartHandshake}
-            />
+
+          <aside className="rounded-3xl bg-white border border-cream-200 p-6">
+            <h2 className="text-sm font-semibold text-slate-900 inline-flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-sun-500" />
+              Trending tags
+            </h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {trending.length === 0 ? (
+                <p className="text-xs text-slate-500">
+                  Tags will surface once the community starts adding them.
+                </p>
+              ) : (
+                trending.map((t) => (
+                  <TagChip
+                    key={t.tag}
+                    tag={t.tag}
+                    href={`/community/search?tag=${encodeURIComponent(t.tag)}`}
+                  />
+                ))
+              )}
+            </div>
+            <h3 className="mt-6 text-sm font-semibold text-slate-900">
+              Members welcomed this week
+            </h3>
+            <p className="mt-1 text-xs text-slate-600">
+              Soft starts go a long way. Drop a hi if you&rsquo;re new — the{" "}
+              <Link
+                href="/community/first-steps"
+                className="underline hover:text-coral-600"
+              >
+                First Steps space
+              </Link>{" "}
+              is for exactly that.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      {/* Pinned highlights */}
+      {pinned.items.length > 0 && (
+        <section className="py-10 bg-white border-y border-cream-200">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <h2 className="text-xl font-semibold text-slate-900 mb-1">
+              Pinned by mods
+            </h2>
+            <p className="text-sm text-slate-600 mb-6">
+              Worth reading first.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {pinned.items.map((t) => (
+                <ThreadCard
+                  key={t.id}
+                  thread={t}
+                  bookmarked={userBookmarks.has(t.id)}
+                  showSpace
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Spaces */}
+      <section className="py-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Spaces in the nest
+              </h2>
+              <p className="text-sm text-slate-600">
+                Pick the room that matches what you need today.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {SPACES.map((s) => {
+              const meta = stats[s.id] ?? { threads: 0, replies: 0 };
+              return (
+                <Link
+                  key={s.id}
+                  href={`/community/${s.id}`}
+                  className="relative overflow-hidden rounded-3xl border border-cream-200 bg-cream-50/40 p-6 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(208,74,44,0.18)] transition"
+                >
+                  <div
+                    className={`absolute -top-12 -right-12 w-40 h-40 rounded-full bg-gradient-to-br ${s.accent} blur-2xl opacity-60`}
+                    aria-hidden
+                  />
+                  <div className="relative">
+                    <h3 className="text-base font-semibold text-slate-900">
+                      {s.name}
+                    </h3>
+                    <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
+                      {s.blurb}
+                    </p>
+                    <dl className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+                      <div>
+                        <dt className="sr-only">Threads</dt>
+                        <dd className="font-semibold text-slate-700">
+                          {meta.threads}
+                        </dd>
+                        <dd>thread{meta.threads === 1 ? "" : "s"}</dd>
+                      </div>
+                      <div>
+                        <dt className="sr-only">Replies</dt>
+                        <dd className="font-semibold text-slate-700">
+                          {meta.replies}
+                        </dd>
+                        <dd>repl{meta.replies === 1 ? "y" : "ies"}</dd>
+                      </div>
+                      {meta.lastActivityAt && (
+                        <div>
+                          <dt className="sr-only">Last activity</dt>
+                          <dd className="font-semibold text-slate-700">
+                            {timeAgo(meta.lastActivityAt)}
+                          </dd>
+                          <dd>last post</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section className="py-14 bg-white border-y border-cream-200">
+      {/* Recent activity feed */}
+      <section className="py-10 bg-white border-y border-cream-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Spaces in the nest
-          </h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Drop into the room that matches what you need today. You can move
-            between as many as you like.
-          </p>
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {SPACES.map((s) => (
-              <article
-                key={s.title}
-                className="relative overflow-hidden rounded-3xl border border-cream-200 bg-cream-50/40 p-6 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-20px_rgba(208,74,44,0.18)] transition"
-              >
-                <div
-                  className={`absolute -top-12 -right-12 w-40 h-40 rounded-full bg-gradient-to-br ${s.accent} blur-2xl opacity-60`}
-                  aria-hidden
-                />
-                <div className="relative">
-                  <h3 className="text-base font-semibold text-slate-900">
-                    {s.title}
-                  </h3>
-                  <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
-                    {s.desc}
-                  </p>
-                  <dl className="mt-4 flex items-center gap-4 text-xs text-slate-500">
-                    <div>
-                      <dt className="sr-only">Threads</dt>
-                      <dd className="font-semibold text-slate-700">
-                        {s.threads.toLocaleString()}
-                      </dd>
-                      <dd>threads</dd>
-                    </div>
-                    <div>
-                      <dt className="sr-only">Members</dt>
-                      <dd className="font-semibold text-slate-700">
-                        {s.members.toLocaleString()}
-                      </dd>
-                      <dd>members</dd>
-                    </div>
-                  </dl>
-                </div>
-              </article>
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Recent activity
+              </h2>
+              <p className="text-sm text-slate-600">
+                Latest posts across every space.
+              </p>
+            </div>
+            <Link
+              href="/community/search?sort=latest"
+              className="text-sm font-medium text-coral-600 hover:text-coral-700"
+            >
+              See all →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {recent.items.map((t) => (
+              <ThreadCard
+                key={t.id}
+                thread={t}
+                bookmarked={userBookmarks.has(t.id)}
+                showSpace
+              />
             ))}
           </div>
-          <div className="mt-8 rounded-2xl border border-dashed border-cream-300 p-5 bg-white">
-            <p className="text-sm text-slate-600 leading-relaxed">
-              <Sparkles className="w-4 h-4 inline-block mr-1.5 text-sun-500" />
-              The forum is in friends-and-family beta while we get the
-              moderation tooling right. Sign up to be invited as we open more
-              spaces each month.
-            </p>
-          </div>
         </div>
       </section>
 
-      <section className="py-14">
+      {/* Principles */}
+      <section className="py-12">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h2 className="text-xl font-semibold text-slate-900 inline-flex items-center gap-2">
+            <HeartHandshake className="w-5 h-5 text-coral-500" />
             Community guidelines, in plain language
           </h2>
-          <ul className="mt-6 space-y-3">
+          <ul className="mt-5 space-y-3">
             {PRINCIPLES.map((p) => (
               <li
                 key={p}
                 className="flex gap-3 items-start text-sm text-slate-700 leading-relaxed bg-white border border-cream-200 rounded-2xl px-4 py-3"
               >
                 <span className="mt-0.5 inline-flex w-5 h-5 rounded-full bg-coral-100 text-coral-600 items-center justify-center text-xs font-bold">
-                  &#10003;
+                  ✓
                 </span>
                 {p}
               </li>
             ))}
           </ul>
+          <p className="mt-4 text-xs text-slate-500">
+            Mods get notified within an hour of a flag. Harm happens slowly,
+            then all at once — we&rsquo;d rather catch it slow.
+          </p>
         </div>
       </section>
     </Shell>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  icon: React.ElementType;
-}) {
-  return (
-    <div>
-      <Icon className="w-5 h-5 mx-auto text-coral-500" />
-      <div className="mt-2 text-xl font-bold text-slate-900">{value}</div>
-      <div className="text-[11px] text-slate-500 uppercase tracking-wide">
-        {label}
-      </div>
-    </div>
   );
 }
