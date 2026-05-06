@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Lock, Pin, Eye, MessageCircle } from "lucide-react";
+import { Lock, Pin, Eye, MessageCircle } from "lucide-react";
 import Shell from "@/components/supportnest/Shell";
 import Body from "@/components/forum/Body";
 import ReactionBar from "@/components/forum/ReactionBar";

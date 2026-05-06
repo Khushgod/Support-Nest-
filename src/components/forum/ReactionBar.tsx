@@ -32,7 +32,7 @@ export default function ReactionBar({
 
   const click = (emoji: ReactionEmoji) => {
     if (!signedIn) {
-      window.location.href = `/login?next=${encodeURIComponent(returnTo)}`;
+      window.location.assign(`/login?next=${encodeURIComponent(returnTo)}`);
       return;
     }
     const fd = new FormData();

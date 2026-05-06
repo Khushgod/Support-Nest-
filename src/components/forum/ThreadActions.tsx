@@ -35,7 +35,7 @@ export default function ThreadActions({
 
   const guard = (fn: () => void) => () => {
     if (!signedIn) {
-      window.location.href = `/login?next=${encodeURIComponent(returnTo)}`;
+      window.location.assign(`/login?next=${encodeURIComponent(returnTo)}`);
       return;
     }
     fn();

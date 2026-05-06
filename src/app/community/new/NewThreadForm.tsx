@@ -38,41 +38,65 @@ export default function NewThreadForm({
     undefined
   );
 
-  const [spaceId, setSpaceId] = useState<SpaceId>(
-    (state?.values?.spaceId as SpaceId) || initialSpace
-  );
-  const [title, setTitle] = useState(state?.values?.title ?? "");
-  const [body, setBody] = useState(state?.values?.body ?? "");
-  const [tags, setTags] = useState(state?.values?.tags ?? "");
-  const [audience, setAudience] = useState<AudienceTag[]>(
-    (state?.values?.audience as AudienceTag[]) || ["everyone"]
-  );
-  const [notes, setNotes] = useState<ContentNote[]>(
-    (state?.values?.notes as ContentNote[]) || []
-  );
+  type FormState = {
+    spaceId: SpaceId;
+    title: string;
+    body: string;
+    tags: string;
+    audience: AudienceTag[];
+    notes: ContentNote[];
+  };
+
+  const [form, setForm] = useState<FormState>({
+    spaceId: (state?.values?.spaceId as SpaceId) || initialSpace,
+    title: state?.values?.title ?? "",
+    body: state?.values?.body ?? "",
+    tags: state?.values?.tags ?? "",
+    audience: (state?.values?.audience as AudienceTag[]) || ["everyone"],
+    notes: (state?.values?.notes as ContentNote[]) || [],
+  });
+  const { spaceId, title, body, tags, audience, notes } = form;
+  const setSpaceId = (v: SpaceId) => setForm((f) => ({ ...f, spaceId: v }));
+  const setTitle = (v: string) => setForm((f) => ({ ...f, title: v }));
+  const setBody = (v: string) => setForm((f) => ({ ...f, body: v }));
+  const setTags = (v: string) => setForm((f) => ({ ...f, tags: v }));
+  const setAudience = (
+    update: AudienceTag[] | ((curr: AudienceTag[]) => AudienceTag[])
+  ) =>
+    setForm((f) => ({
+      ...f,
+      audience: typeof update === "function" ? update(f.audience) : update,
+    }));
+  const setNotes = (
+    update: ContentNote[] | ((curr: ContentNote[]) => ContentNote[])
+  ) =>
+    setForm((f) => ({
+      ...f,
+      notes: typeof update === "function" ? update(f.notes) : update,
+    }));
   const hydratedRef = useRef(false);
 
-  // Hydrate from localStorage on mount.
+  // SSR-safe localStorage hydration: render the server's initial state, then
+  // merge the user's draft on mount via a single setState.
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(DRAFT_KEY);
       if (raw) {
-        const draft = JSON.parse(raw) as Partial<{
-          spaceId: SpaceId;
-          title: string;
-          body: string;
-          tags: string;
-          audience: AudienceTag[];
-          notes: ContentNote[];
-        }>;
-        if (draft.spaceId && SPACES.some((s) => s.id === draft.spaceId)) {
-          setSpaceId(draft.spaceId);
-        }
-        if (typeof draft.title === "string" && draft.title) setTitle(draft.title);
-        if (typeof draft.body === "string" && draft.body) setBody(draft.body);
-        if (typeof draft.tags === "string" && draft.tags) setTags(draft.tags);
-        if (Array.isArray(draft.audience)) setAudience(draft.audience);
-        if (Array.isArray(draft.notes)) setNotes(draft.notes);
+        const draft = JSON.parse(raw) as Partial<FormState>;
+        // SSR-safe hydration; see SensoryClient/IepClient for rationale.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setForm((f) => {
+          const next = { ...f };
+          if (draft.spaceId && SPACES.some((s) => s.id === draft.spaceId)) {
+            next.spaceId = draft.spaceId;
+          }
+          if (typeof draft.title === "string" && draft.title) next.title = draft.title;
+          if (typeof draft.body === "string" && draft.body) next.body = draft.body;
+          if (typeof draft.tags === "string" && draft.tags) next.tags = draft.tags;
+          if (Array.isArray(draft.audience)) next.audience = draft.audience;
+          if (Array.isArray(draft.notes)) next.notes = draft.notes;
+          return next;
+        });
       }
     } catch {
       // ignore corrupt drafts

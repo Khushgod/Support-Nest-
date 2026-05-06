@@ -3,6 +3,7 @@ import { ChevronLeft, Search } from "lucide-react";
 import Shell from "@/components/supportnest/Shell";
 import ThreadCard from "@/components/forum/ThreadCard";
 import { TagChip } from "@/components/forum/AudienceChips";
+import AutoSubmitSelect from "@/components/forum/AutoSubmitSelect";
 import { getCurrentUser } from "@/lib/auth/dal";
 import {
   bookmarksForUser,
@@ -305,19 +306,12 @@ export default async function SearchPage({
                     )}
                     {cn && <input type="hidden" name="cn" value={cn} />}
                     {tag && <input type="hidden" name="tag" value={tag} />}
-                    <select
+                    <AutoSubmitSelect
                       id="search-sort"
                       name="sort"
                       defaultValue={sort}
-                      onChange={(e) => e.currentTarget.form?.submit()}
-                      className="rounded-xl border border-cream-300 bg-white px-2.5 py-1.5 text-sm"
-                    >
-                      {SORT_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
+                      options={SORT_OPTIONS}
+                    />
                   </form>
                 </div>
               </div>

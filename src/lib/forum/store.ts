@@ -88,6 +88,18 @@ function withWriteLock<T>(fn: () => Promise<T>): Promise<T> {
   return next;
 }
 
+function dedupe<T>(items: T[]): T[] {
+  const seen = new Set<T>();
+  const out: T[] = [];
+  for (const x of items) {
+    if (!seen.has(x)) {
+      seen.add(x);
+      out.push(x);
+    }
+  }
+  return out;
+}
+
 function authorFor(store: ForumStore, id: string): Author | null {
   const seed = store.seedUsers.find((u) => u.id === id);
   if (seed) return seed;
@@ -352,7 +364,9 @@ export async function createThread(
       createdAt: now,
       updatedAt: now,
       lastActivityAt: now,
-      tags: (input.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 6),
+      tags: dedupe(
+        (input.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean)
+      ).slice(0, 6),
       audienceTags: input.audienceTags ?? ["everyone"],
       contentNotes: input.contentNotes ?? [],
       isPinned: false,
