@@ -9,9 +9,10 @@ export type SpaceId =
   | "tweens-teens"
   | "adults"
   | "educators"
-  | "healthcare";
+  | "healthcare"
+  | "job seekers";
 
-export type AudienceTag = "parents" | "teachers" | "nd_adults" | "everyone";
+export type AudienceTag = "parents" | "teachers" | "nd_adults" | "everyone" | "job_seekers";
 
 export type ContentNote =
   | "burnout"
@@ -20,7 +21,9 @@ export type ContentNote =
   | "school-stress"
   | "medical"
   | "grief"
-  | "anxiety";
+  | "anxiety"
+  | "rejection"
+  | "unemployment";
 
 export type ReactionEmoji =
   | "care"
@@ -93,6 +96,13 @@ export const SPACES: {
     audience: ["everyone"],
     accent: "from-sun-200 to-coral-200",
   },
+  {
+    id: "job seekers",
+    name: "Job seekers",
+    blurb: "Career advice, job search strategies, and employment support.",
+    audience: ["job_seekers"],
+    accent: "from-coral-200 to-sun-200",
+  },
 ];
 
 export const SPACE_BY_ID: Record<SpaceId, (typeof SPACES)[number]> =
@@ -109,6 +119,8 @@ export const CONTENT_NOTE_LABELS: Record<ContentNote, string> = {
   medical: "Medical",
   grief: "Grief",
   anxiety: "Anxiety",
+  rejection: "Rejection",
+  unemployment: "Unemployment",
 };
 
 export const AUDIENCE_LABELS: Record<AudienceTag, string> = {
@@ -116,6 +128,7 @@ export const AUDIENCE_LABELS: Record<AudienceTag, string> = {
   teachers: "Teachers",
   nd_adults: "ND adults",
   everyone: "Everyone",
+  job_seekers: "Job seekers",
 };
 
 export type Author = {
