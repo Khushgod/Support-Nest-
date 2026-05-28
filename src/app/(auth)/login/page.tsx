@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="bg-white rounded-3xl shadow-[0_30px_60px_-30px_rgba(208,74,44,0.25)] border border-cream-200 p-7 sm:p-9 animate-slide-up">
+    <div className="bg-white rounded-3xl shadow-[var(--shadow-primary-panel)] border border-cream-200 p-7 sm:p-9 animate-slide-up">
       <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
         Welcome back
       </h1>

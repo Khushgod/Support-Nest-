@@ -132,7 +132,7 @@ export default function EventsPage() {
             {UPCOMING.map((e) => (
               <li
                 key={e.title}
-                className="rounded-3xl bg-white border border-cream-200 p-6 sm:flex sm:items-center sm:justify-between gap-6 hover:shadow-[0_20px_40px_-22px_rgba(208,74,44,0.2)] transition"
+                className="rounded-3xl bg-white border border-cream-200 p-6 sm:flex sm:items-center sm:justify-between gap-6 hover:shadow-[var(--shadow-primary-card)] transition"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">

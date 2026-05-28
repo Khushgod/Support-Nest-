@@ -33,7 +33,7 @@ export default function ThreadCard({
   return (
     <Link
       href={href}
-      className="block rounded-3xl border border-cream-200 bg-white p-5 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(208,74,44,0.18)] transition"
+      className="block rounded-3xl border border-cream-200 bg-white p-5 hover:-translate-y-0.5 hover:shadow-[var(--shadow-primary-card)] transition"
     >
       <div className="flex items-start justify-between gap-3 flex-wrap mb-2">
         <div className="flex items-center gap-2 flex-wrap">

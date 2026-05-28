@@ -64,7 +64,7 @@ export default function CollectionPage({
               {s.items.map((r) => (
                 <li
                   key={r.title}
-                  className="group rounded-2xl border border-cream-200 bg-white p-5 hover:shadow-[0_20px_40px_-22px_rgba(208,74,44,0.18)] transition"
+                  className="group rounded-2xl border border-cream-200 bg-white p-5 hover:shadow-[var(--shadow-primary-card)] transition"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span

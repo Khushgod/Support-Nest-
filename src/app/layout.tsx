@@ -7,6 +7,17 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const themeInitializer = `
+(function () {
+  try {
+    var savedTheme = window.localStorage.getItem("supportnest_theme");
+    if (savedTheme === "sensory") {
+      document.documentElement.dataset.theme = "sensory";
+    }
+  } catch (_) {}
+})();
+`;
+
 export const metadata: Metadata = {
   title: "GeneTranslate — Understand Your Genetic Report",
   description:
@@ -19,7 +30,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full`}>
+    <html
+      lang="en"
+      className={`${inter.variable} h-full`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

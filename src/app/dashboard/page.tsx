@@ -104,7 +104,7 @@ export default async function DashboardPage({ searchParams }: SearchProps) {
             <Link
               key={q.href}
               href={q.href}
-              className="rounded-3xl border border-cream-200 bg-white p-6 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-22px_rgba(208,74,44,0.18)] transition"
+              className="rounded-3xl border border-cream-200 bg-white p-6 hover:-translate-y-0.5 hover:shadow-[var(--shadow-primary-card)] transition"
             >
               <span
                 className={`inline-flex w-10 h-10 rounded-xl items-center justify-center mb-4 ${q.color}`}

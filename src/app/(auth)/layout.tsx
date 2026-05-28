@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/supportnest/Logo";
 import { Lock } from "lucide-react";
+import SensoryModeToggle from "@/components/theme/SensoryModeToggle";
 
 export default function AuthLayout({
   children,
@@ -9,8 +10,9 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen bg-warm-gradient flex flex-col">
-      <header className="px-6 py-5">
+      <header className="px-6 py-5 flex items-center justify-between gap-4">
         <Logo size="md" />
+        <SensoryModeToggle />
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 pb-10">

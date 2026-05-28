@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import { getCurrentUser } from "@/lib/auth/dal";
+import SensoryModeToggle from "@/components/theme/SensoryModeToggle";
 
 const NAV = [
   { href: "/community", label: "Community" },
@@ -62,11 +63,17 @@ export default async function Header() {
               </Link>
             </>
           )}
+          <div className="hidden lg:block">
+            <SensoryModeToggle />
+          </div>
         </div>
       </div>
 
-      <nav className="md:hidden border-t border-cream-200/80 bg-white">
-        <ul className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center gap-5 overflow-x-auto py-2 text-xs font-medium">
+      <nav className="border-t border-cream-200/80 bg-white md:hidden">
+        <ul className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center gap-3 overflow-x-auto py-2 text-xs font-medium">
+          <li className="flex-shrink-0">
+            <SensoryModeToggle className="px-2.5 py-1.5" />
+          </li>
           {NAV.map((item) => (
             <li key={item.href} className="flex-shrink-0">
               <Link

@@ -227,7 +227,7 @@ export default function HomePage() {
                 <Link
                   key={title}
                   href={href}
-                  className="group relative overflow-hidden rounded-3xl border border-cream-200 bg-white p-7 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-20px_rgba(208,74,44,0.25)] transition"
+                  className="group relative overflow-hidden rounded-3xl border border-cream-200 bg-white p-7 hover:-translate-y-0.5 hover:shadow-[var(--shadow-primary-soft)] transition"
                 >
                   <div
                     className={`absolute -top-12 -right-12 w-40 h-40 rounded-full bg-gradient-to-br ${accent} blur-2xl opacity-70`}
@@ -299,7 +299,7 @@ export default function HomePage() {
                 <Link
                   key={t.name}
                   href={t.href}
-                  className="rounded-3xl border border-cream-200 bg-white p-7 hover:shadow-[0_20px_40px_-20px_rgba(138,97,223,0.25)] transition"
+                  className="rounded-3xl border border-cream-200 bg-white p-7 hover:shadow-[var(--shadow-secondary-soft)] transition"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -460,12 +460,12 @@ export default function HomePage() {
         {/* CTA */}
         <section className="py-20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-coral-500 via-coral-400 to-sun-400 px-6 py-14 sm:px-12 sm:py-20 text-center text-white shadow-[0_30px_60px_-25px_rgba(208,74,44,0.5)]">
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-coral-500 via-coral-400 to-sun-400 px-6 py-14 sm:px-12 sm:py-20 text-center text-white shadow-[var(--shadow-primary-cta)]">
               <div
                 className="absolute inset-0 opacity-30 mix-blend-soft-light"
                 style={{
                   background:
-                    "radial-gradient(60% 60% at 80% 20%, white 0%, transparent 60%), radial-gradient(50% 50% at 20% 80%, white 0%, transparent 60%)",
+                    "radial-gradient(60% 60% at 80% 20%, var(--theme-on-primary) 0%, transparent 60%), radial-gradient(50% 50% at 20% 80%, var(--theme-on-primary) 0%, transparent 60%)",
                 }}
                 aria-hidden
               />

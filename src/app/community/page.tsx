@@ -174,7 +174,7 @@ export default async function CommunityHubPage() {
                 <Link
                   key={s.id}
                   href={`/community/${s.id}`}
-                  className="relative overflow-hidden rounded-3xl border border-cream-200 bg-cream-50/40 p-6 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-22px_rgba(208,74,44,0.18)] transition"
+                  className="relative overflow-hidden rounded-3xl border border-cream-200 bg-cream-50/40 p-6 hover:-translate-y-0.5 hover:shadow-[var(--shadow-primary-card)] transition"
                 >
                   <div
                     className={`absolute -top-12 -right-12 w-40 h-40 rounded-full bg-gradient-to-br ${s.accent} blur-2xl opacity-60`}
