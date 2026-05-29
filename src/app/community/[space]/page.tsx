@@ -12,12 +12,14 @@ import {
 } from "@/lib/forum/store";
 import {
   AUDIENCE_LABELS,
+  AUDIENCE_TAGS,
   CONTENT_NOTE_LABELS,
+  CONTENT_NOTES,
   SPACE_BY_ID,
   SPACES,
+  spaceIdFromParam,
   type AudienceTag,
   type ContentNote,
-  type SpaceId,
 } from "@/lib/forum/types";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +46,8 @@ export async function generateMetadata({
   params: Promise<{ space: string }>;
 }) {
   const { space } = await params;
-  const meta = SPACE_BY_ID[space as SpaceId];
+  const spaceId = spaceIdFromParam(space);
+  const meta = spaceId ? SPACE_BY_ID[spaceId] : undefined;
   if (!meta) return { title: "Community | SupportNest" };
   return {
     title: `${meta.name} | SupportNest community`,
@@ -67,25 +70,17 @@ export default async function SpacePage({
 }) {
   const { space } = await params;
   const sp = await searchParams;
-  const meta = SPACE_BY_ID[space as SpaceId];
+  const spaceId = spaceIdFromParam(space);
+  const meta = spaceId ? SPACE_BY_ID[spaceId] : undefined;
   if (!meta) notFound();
 
   const sort = asSort(sp.sort);
   const audience =
-    sp.audience && (["parents", "teachers", "nd_adults", "everyone"].includes(sp.audience))
+    sp.audience && AUDIENCE_TAGS.includes(sp.audience as AudienceTag)
       ? (sp.audience as AudienceTag)
       : undefined;
   const cn =
-    sp.cn &&
-    [
-      "burnout",
-      "diagnosis",
-      "meltdown",
-      "school-stress",
-      "medical",
-      "grief",
-      "anxiety",
-    ].includes(sp.cn)
+    sp.cn && CONTENT_NOTES.includes(sp.cn as ContentNote)
       ? (sp.cn as ContentNote)
       : undefined;
   const tag = sp.tag?.trim() || undefined;
@@ -225,9 +220,7 @@ export default async function SpacePage({
                     className="rounded-xl border border-cream-300 bg-white px-2.5 py-1.5 text-sm"
                   >
                     <option value="">Any</option>
-                    {(
-                      ["parents", "teachers", "nd_adults", "everyone"] as AudienceTag[]
-                    ).map((a) => (
+                    {AUDIENCE_TAGS.map((a) => (
                       <option key={a} value={a}>
                         {AUDIENCE_LABELS[a]}
                       </option>

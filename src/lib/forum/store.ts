@@ -22,6 +22,7 @@ import {
 } from "./types";
 import { findById, type SafeUser } from "@/lib/auth/users";
 import { buildSeedReplies, SEED_USERS } from "./seed";
+import { splitForumTags } from "./format";
 
 /**
  * File-backed forum store. Same atomic-write pattern as the user store.
@@ -34,35 +35,7 @@ const DATA_DIR =
   process.env.SUPPORTNEST_DATA_DIR || path.join(process.cwd(), ".data");
 const FORUM_FILE = path.join(DATA_DIR, "forum.json");
 
-async function ensureSeeded(): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  try {
-    await fs.access(FORUM_FILE);
-    return;
-  } catch {
-    // doesn't exist; seed
-  }
-  const { threads, replies } = buildSeedReplies();
-  const seed: ForumStore = {
-    version: 1,
-    threads,
-    replies,
-    bookmarks: [],
-    follows: [],
-    seedUsers: SEED_USERS,
-  };
-  await fs.writeFile(FORUM_FILE, JSON.stringify(seed, null, 2), { mode: 0o600 });
-}
-
-async function read(): Promise<ForumStore> {
-  await ensureSeeded();
-  const raw = await fs.readFile(FORUM_FILE, "utf8");
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && parsed.version === 1) return parsed as ForumStore;
-  } catch {
-    // fall through
-  }
+function buildSeedStore(): ForumStore {
   const { threads, replies } = buildSeedReplies();
   return {
     version: 1,
@@ -72,6 +45,68 @@ async function read(): Promise<ForumStore> {
     follows: [],
     seedUsers: SEED_USERS,
   };
+}
+
+function mergeSeedRecords(store: ForumStore): {
+  store: ForumStore;
+  changed: boolean;
+} {
+  const seed = buildSeedStore();
+  let changed = false;
+
+  const userIds = new Set(store.seedUsers.map((u) => u.id));
+  for (const user of seed.seedUsers) {
+    if (!userIds.has(user.id)) {
+      store.seedUsers.push(user);
+      changed = true;
+    }
+  }
+
+  const threadIds = new Set(store.threads.map((t) => t.id));
+  for (const thread of seed.threads) {
+    if (!threadIds.has(thread.id)) {
+      store.threads.push(thread);
+      changed = true;
+    }
+  }
+
+  const replyIds = new Set(store.replies.map((r) => r.id));
+  for (const reply of seed.replies) {
+    if (!replyIds.has(reply.id)) {
+      store.replies.push(reply);
+      changed = true;
+    }
+  }
+
+  return { store, changed };
+}
+
+async function ensureSeeded(): Promise<void> {
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  try {
+    await fs.access(FORUM_FILE);
+    return;
+  } catch {
+    // doesn't exist; seed
+  }
+  const seed = buildSeedStore();
+  await fs.writeFile(FORUM_FILE, JSON.stringify(seed, null, 2), { mode: 0o600 });
+}
+
+async function read(): Promise<ForumStore> {
+  await ensureSeeded();
+  const raw = await fs.readFile(FORUM_FILE, "utf8");
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.version === 1) {
+      const merged = mergeSeedRecords(parsed as ForumStore);
+      if (merged.changed) await write(merged.store);
+      return merged.store;
+    }
+  } catch {
+    // fall through
+  }
+  return buildSeedStore();
 }
 
 async function write(store: ForumStore): Promise<void> {
@@ -86,18 +121,6 @@ function withWriteLock<T>(fn: () => Promise<T>): Promise<T> {
   const next = writeChain.then(() => fn());
   writeChain = next.catch(() => undefined);
   return next;
-}
-
-function dedupe<T>(items: T[]): T[] {
-  const seen = new Set<T>();
-  const out: T[] = [];
-  for (const x of items) {
-    if (!seen.has(x)) {
-      seen.add(x);
-      out.push(x);
-    }
-  }
-  return out;
 }
 
 function authorFor(store: ForumStore, id: string): Author | null {
@@ -200,7 +223,13 @@ export async function listThreads(
       (t) =>
         t.title.toLowerCase().includes(needle) ||
         t.body.toLowerCase().includes(needle) ||
-        t.tags.some((tag) => tag.toLowerCase().includes(needle))
+        t.tags.some((tag) => tag.toLowerCase().includes(needle)) ||
+        [
+          t.seedMetadata?.theme,
+          t.seedMetadata?.anchorThreadType,
+          t.seedMetadata?.timeliness,
+          t.seedMetadata?.communityUse,
+        ].some((value) => value?.toLowerCase().includes(needle))
     );
   }
 
@@ -364,9 +393,7 @@ export async function createThread(
       createdAt: now,
       updatedAt: now,
       lastActivityAt: now,
-      tags: dedupe(
-        (input.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean)
-      ).slice(0, 6),
+      tags: splitForumTags(input.tags ?? [], 6),
       audienceTags: input.audienceTags ?? ["everyone"],
       contentNotes: input.contentNotes ?? [],
       isPinned: false,

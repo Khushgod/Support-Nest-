@@ -26,8 +26,8 @@ import {
   REACTION_LABELS,
   REACTION_ORDER,
   SPACE_BY_ID,
+  spaceIdFromParam,
   type ReactionEmoji,
-  type SpaceId,
 } from "@/lib/forum/types";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +52,8 @@ export default async function ThreadPage({
   params: Promise<{ space: string; thread: string }>;
 }) {
   const { space, thread: tid } = await params;
-  const meta = SPACE_BY_ID[space as SpaceId];
+  const spaceId = spaceIdFromParam(space);
+  const meta = spaceId ? SPACE_BY_ID[spaceId] : undefined;
   if (!meta) notFound();
   const t = await getThread(tid);
   if (!t || t.spaceId !== meta.id) notFound();

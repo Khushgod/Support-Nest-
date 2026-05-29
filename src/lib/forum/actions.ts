@@ -17,6 +17,8 @@ import {
 } from "./store";
 import {
   REACTION_ORDER,
+  AUDIENCE_TAGS,
+  CONTENT_NOTES,
   SPACES,
   type AudienceTag,
   type ContentNote,
@@ -27,16 +29,8 @@ import {
 const SpaceIdSchema = z.enum(
   SPACES.map((s) => s.id) as [SpaceId, ...SpaceId[]]
 );
-const AudienceSchema = z.enum(["parents", "teachers", "nd_adults", "everyone"]);
-const ContentNoteSchema = z.enum([
-  "burnout",
-  "diagnosis",
-  "meltdown",
-  "school-stress",
-  "medical",
-  "grief",
-  "anxiety",
-]);
+const AudienceSchema = z.enum(AUDIENCE_TAGS as [AudienceTag, ...AudienceTag[]]);
+const ContentNoteSchema = z.enum(CONTENT_NOTES as [ContentNote, ...ContentNote[]]);
 const ReactionSchema = z.enum(REACTION_ORDER as [ReactionEmoji, ...ReactionEmoji[]]);
 
 const NewThreadSchema = z.object({
@@ -72,26 +66,14 @@ function audienceArray(formData: FormData): AudienceTag[] {
   return formData
     .getAll("audience")
     .filter((v): v is string => typeof v === "string")
-    .filter((v): v is AudienceTag =>
-      ["parents", "teachers", "nd_adults", "everyone"].includes(v)
-    );
+    .filter((v): v is AudienceTag => AUDIENCE_TAGS.includes(v as AudienceTag));
 }
 
 function notesArray(formData: FormData): ContentNote[] {
   return formData
     .getAll("notes")
     .filter((v): v is string => typeof v === "string")
-    .filter((v): v is ContentNote =>
-      [
-        "burnout",
-        "diagnosis",
-        "meltdown",
-        "school-stress",
-        "medical",
-        "grief",
-        "anxiety",
-      ].includes(v)
-    );
+    .filter((v): v is ContentNote => CONTENT_NOTES.includes(v as ContentNote));
 }
 
 export async function createThreadAction(

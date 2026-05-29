@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { bodyToSegments, snippet, timeAgo, buildSearchHref } from "../format";
+import {
+  bodyToSegments,
+  buildSearchHref,
+  normalizeForumTag,
+  snippet,
+  splitForumTags,
+  timeAgo,
+} from "../format";
 
 describe("forum/format", () => {
   describe("timeAgo", () => {
@@ -39,6 +46,22 @@ describe("forum/format", () => {
     it("collapses runs of whitespace", () => {
       const out = snippet("a   b\n\n c", 50);
       expect(out).toBe("a b c");
+    });
+  });
+
+  describe("forum tag helpers", () => {
+    it("normalizes tags for seed imports and user-created posts", () => {
+      expect(normalizeForumTag(" Interview Scripts! ")).toBe("interview-scripts");
+      expect(normalizeForumTag("ND_adults")).toBe("nd-adults");
+    });
+
+    it("splits, de-duplicates, and caps tags", () => {
+      expect(
+        splitForumTags(
+          "job-search, employment gaps, job-search, ADHD, burnout, scripts, extra",
+          5
+        )
+      ).toEqual(["job-search", "employment", "gaps", "adhd", "burnout"]);
     });
   });
 

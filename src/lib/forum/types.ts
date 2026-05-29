@@ -14,6 +14,14 @@ export type SpaceId =
 
 export type AudienceTag = "parents" | "teachers" | "nd_adults" | "everyone" | "job_seekers";
 
+export const AUDIENCE_TAGS: AudienceTag[] = [
+  "parents",
+  "teachers",
+  "nd_adults",
+  "everyone",
+  "job_seekers",
+];
+
 export type ContentNote =
   | "burnout"
   | "diagnosis"
@@ -24,6 +32,18 @@ export type ContentNote =
   | "anxiety"
   | "rejection"
   | "unemployment";
+
+export const CONTENT_NOTES: ContentNote[] = [
+  "burnout",
+  "diagnosis",
+  "meltdown",
+  "school-stress",
+  "medical",
+  "grief",
+  "anxiety",
+  "rejection",
+  "unemployment",
+];
 
 export type ReactionEmoji =
   | "care"
@@ -111,6 +131,20 @@ export const SPACE_BY_ID: Record<SpaceId, (typeof SPACES)[number]> =
     (typeof SPACES)[number]
   >;
 
+export function spaceIdFromParam(value: string): SpaceId | undefined {
+  const decoded = safeDecodeURIComponent(value);
+  const candidates = [value, decoded, decoded.replace(/-/g, " ")];
+  return SPACES.find((space) => candidates.includes(space.id))?.id;
+}
+
+function safeDecodeURIComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export const CONTENT_NOTE_LABELS: Record<ContentNote, string> = {
   burnout: "Burnout",
   diagnosis: "Diagnosis",
@@ -144,6 +178,15 @@ export type Reaction = {
   emoji: ReactionEmoji;
 };
 
+export type SeedMetadata = {
+  source: "question-response-csv";
+  theme: string;
+  rank: number;
+  anchorThreadType: string;
+  timeliness: string;
+  communityUse: string;
+};
+
 export type Reply = {
   id: string;
   threadId: string;
@@ -153,6 +196,14 @@ export type Reply = {
   editedAt?: string;
   parentReplyId?: string;
   reactions: Reaction[];
+};
+
+export type ForumSeedReplyInput = {
+  authorId: string;
+  body: string;
+  daysAgo: number;
+  minutesOffset?: number;
+  reactions?: Partial<Record<ReactionEmoji, number>>;
 };
 
 export type Thread = {
@@ -171,6 +222,23 @@ export type Thread = {
   isLocked: boolean;
   viewCount: number;
   reactions: Reaction[];
+  seedMetadata?: SeedMetadata;
+};
+
+export type ForumSeedThreadInput = {
+  authorId: string;
+  spaceId: SpaceId;
+  title: string;
+  body: string;
+  daysAgo: number;
+  minutesOffset?: number;
+  tags?: string[];
+  audienceTags?: AudienceTag[];
+  contentNotes?: ContentNote[];
+  pinned?: boolean;
+  reactions?: Partial<Record<ReactionEmoji, number>>;
+  replies?: ForumSeedReplyInput[];
+  seedMetadata?: SeedMetadata;
 };
 
 export type Bookmark = {

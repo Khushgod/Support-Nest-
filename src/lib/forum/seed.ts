@@ -1,11 +1,11 @@
 import type {
-  AudienceTag,
   Author,
-  ContentNote,
+  ForumSeedThreadInput,
   Reply,
-  SpaceId,
   Thread,
 } from "./types";
+import { csvRowsToSeedThreads, type QuestionResponseCsvRow } from "./csv-import";
+import { normalizeForumTag } from "./format";
 
 /**
  * Synthetic seed data so a freshly cloned/started instance has a forum that
@@ -24,21 +24,270 @@ export const SEED_USERS: Author[] = [
   { id: "seed-noor", displayName: "Noor", handle: "noor~", role: "parent" },
   { id: "seed-eli", displayName: "Eli", handle: "eli~", role: "neurodivergent_adult" },
   { id: "seed-leah", displayName: "Leah", handle: "leah~", role: "parent" },
+  { id: "seed-csv-workplace", displayName: "Workplace Guide", handle: "workplace-guide~", role: "moderator" },
+  { id: "seed-csv-parenting", displayName: "Parenting Guide", handle: "parenting-guide~", role: "moderator" },
+  { id: "seed-csv-mental-health", displayName: "Recovery Guide", handle: "recovery-guide~", role: "moderator" },
+  { id: "seed-csv-identity", displayName: "Identity Guide", handle: "identity-guide~", role: "moderator" },
+  { id: "seed-csv-school", displayName: "School Support Guide", handle: "school-guide~", role: "moderator" },
+  { id: "seed-csv-community", displayName: "Community Guide", handle: "community-guide~", role: "moderator" },
 ];
 
-type Seed = {
-  authorId: string;
-  spaceId: SpaceId;
-  title: string;
-  body: string;
-  daysAgo: number;
-  tags?: string[];
-  audienceTags?: AudienceTag[];
-  contentNotes?: ContentNote[];
-  pinned?: boolean;
-  reactions?: Partial<Record<string, number>>;
-  replies?: { authorId: string; body: string; daysAgo: number; reactions?: Partial<Record<string, number>> }[];
-};
+type Seed = ForumSeedThreadInput;
+
+const QUESTION_RESPONSE_CSV_ROWS: QuestionResponseCsvRow[] = [
+  {
+    theme: "Workplace and Career Navigation",
+    rank: 1,
+    question: "How do I explain employment gaps without making my ADHD or burnout sound like a liability?",
+    response: "You do not have to narrate every difficult season in detail. A calm version can be: 'I took time for health and skill-building, and I am now ready for a structured role where I can contribute consistently.' Then pivot to proof: projects, courses, freelance work, volunteering, or what you learned about the conditions that help you work well. The goal is not to hide your story. It is to keep the interview focused on your readiness and strengths.",
+    suggestedTags: "job-search, employment-gaps, burnout, interview-scripts, adhd",
+    anchorThreadType: "Script / Template",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Anchor discussion and resource page example",
+  },
+  {
+    theme: "Workplace and Career Navigation",
+    rank: 2,
+    question: "How do I ask my manager for clearer instructions without sounding difficult?",
+    response: "Try making it about work quality instead of personal deficiency. For example: 'I do my best work when priorities and next steps are written down. Could we summarize action items after meetings so I can make sure I deliver the right thing?' That is a reasonable work-system request. Many people, ND or not, benefit from written clarity.",
+    suggestedTags: "workplace, manager-communication, accommodations, written-briefs",
+    anchorThreadType: "What helped me",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Workplace scripts library",
+  },
+  {
+    theme: "Workplace and Career Navigation",
+    rank: 3,
+    question: "Is remote work really better for neurodivergent people, or am I just avoiding the office?",
+    response: "It can be both: remote work may reduce sensory load and social masking, while the office may offer structure and faster feedback. A useful question is not 'Which one should I be able to tolerate?' but 'Where do I produce good work without paying for it with recovery time?' Some people need remote, some need hybrid, and some need office days with sensory boundaries.",
+    suggestedTags: "remote-work, sensory, hybrid-work, workplace-design",
+    anchorThreadType: "Open discussion",
+    timeliness: "Timely/current workplace topic",
+    communityUse: "Forum debate and poll",
+  },
+  {
+    theme: "Workplace and Career Navigation",
+    rank: 4,
+    question: "How do I stop job-hopping when every role eventually burns me out?",
+    response: "Look for the pattern underneath the exits: unclear expectations, sensory overload, too many meetings, no recovery time, or constant masking. Job-hopping is often treated like a character flaw, but it can be useful data. Before the next role, write your non-negotiables, your early warning signs, and the supports you will ask for before you are already depleted.",
+    suggestedTags: "career-navigation, burnout, job-hopping, boundaries",
+    anchorThreadType: "Open discussion",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Career planning worksheet",
+  },
+  {
+    theme: "Workplace and Career Navigation",
+    rank: 5,
+    question: "How do I talk about strengths without sounding like I am overcompensating for my challenges?",
+    response: "Use evidence, not hype. Instead of saying 'ADHD is my superpower,' try: 'I am strong at fast pattern recognition and creative problem solving, and I use written systems to manage follow-through.' That keeps the whole picture honest: strengths plus supports. People tend to trust that more than a polished performance.",
+    suggestedTags: "strengths, self-advocacy, career-story, job-search",
+    anchorThreadType: "What helped me",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Profile-building prompt",
+  },
+  {
+    theme: "Parenting and Family Systems",
+    rank: 1,
+    question: "My child just got diagnosed. What should we do first?",
+    response: "First, breathe. You do not have to solve the whole future this week. Start with three things: understand the report in plain language, identify the one situation causing the most stress right now, and tell your child in a way that protects their dignity. A diagnosis is not a verdict. It is a map you can slowly learn to use.",
+    suggestedTags: "diagnosis, parenting, first-steps, tween-support",
+    anchorThreadType: "Start here",
+    timeliness: "Evergreen launch seed",
+    communityUse: "New parent onboarding resource",
+  },
+  {
+    theme: "Parenting and Family Systems",
+    rank: 2,
+    question: "How do I help my tween without turning every day into a battle?",
+    response: "When everything becomes a battle, the family system is usually overloaded, not lazy or broken. Pick one pressure point: homework, mornings, bedtime, or screens. Change the environment before increasing consequences. Snacks, movement, visual steps, fewer verbal reminders, and a decompression window can do more than another lecture.",
+    suggestedTags: "parenting, routines, homework, family-systems",
+    anchorThreadType: "What helped me",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Parent routines guide",
+  },
+  {
+    theme: "Parenting and Family Systems",
+    rank: 3,
+    question: "How do I explain ADHD or autism to my child without making them feel broken?",
+    response: "Use language that separates difference from defect. Something like: 'Your brain works differently, and that means some things are harder and some things may come naturally. Our job is to understand your brain and build supports around it.' Children often remember the emotional tone more than the exact words, so calm and matter-of-fact helps.",
+    suggestedTags: "identity, parenting, autism, adhd, self-understanding",
+    anchorThreadType: "Script / Template",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Conversation script page",
+  },
+  {
+    theme: "Parenting and Family Systems",
+    rank: 4,
+    question: "What do I do when the school says my child is fine, but home tells a different story?",
+    response: "Believe the pattern, not just the setting. Many ND children hold it together at school and collapse at home. Document what you see: sleep, meltdowns, avoidance, physical complaints, shutdowns, homework distress. Bring examples, not just conclusions. A child who looks fine all day may still be paying a very high price.",
+    suggestedTags: "school-advocacy, masking, parenting, documentation",
+    anchorThreadType: "Open discussion",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Advocacy checklist",
+  },
+  {
+    theme: "Parenting and Family Systems",
+    rank: 5,
+    question: "How do I take care of myself while advocating for my ND child?",
+    response: "Parent advocacy can quietly become a second full-time job. You are allowed to need support too. Start small: one person who can listen without judging, one admin block per week instead of constant firefighting, and one recovery ritual that is not earned by productivity. Your wellbeing is part of the support system, not a bonus.",
+    suggestedTags: "parent-wellbeing, advocacy, burnout, family-support",
+    anchorThreadType: "Open discussion",
+    timeliness: "High emotional relevance",
+    communityUse: "Parent wellbeing anchor thread",
+  },
+  {
+    theme: "Mental Health and Recovery",
+    rank: 1,
+    question: "How do I know if this is burnout and not just me failing again?",
+    response: "Burnout often feels personal, but it is usually a signal that demand has exceeded capacity for too long. Look for changes: losing skills you normally have, needing much more recovery, shutdowns, sensory sensitivity, dread, or being unable to start even simple tasks. That is not a moral failure. It is information that your system needs less pressure and more support.",
+    suggestedTags: "burnout, recovery, self-compassion, mental-health",
+    anchorThreadType: "Open discussion",
+    timeliness: "High emotional relevance",
+    communityUse: "Burnout recognition resource",
+  },
+  {
+    theme: "Mental Health and Recovery",
+    rank: 2,
+    question: "What actually helps recovery when rest alone is not fixing it?",
+    response: "Rest matters, but recovery often also needs reduced demands, fewer transitions, sensory relief, practical help, and permission to stop performing 'fine.' Think in layers: body basics, environment, workload, relationships, and identity. If you only sleep but return to the same overload, your system may never get a real chance to recover.",
+    suggestedTags: "recovery, burnout, sensory, support-systems",
+    anchorThreadType: "What helped me",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Recovery planning guide",
+  },
+  {
+    theme: "Mental Health and Recovery",
+    rank: 3,
+    question: "My child says scary things when overwhelmed. How seriously should I take it?",
+    response: "Take it seriously and calmly. You do not have to panic, but you also do not have to guess alone. Stay close, reduce immediate demands, ask simple direct questions, and contact a qualified professional or local crisis/emergency service if there is any risk of harm. A child saying frightening things is not attention-seeking to dismiss. It is a signal to increase support.",
+    suggestedTags: "child-mental-health, crisis-support, parenting, safety",
+    anchorThreadType: "Resource",
+    timeliness: "Safety-critical evergreen",
+    communityUse: "Crisis support signposting page",
+  },
+  {
+    theme: "Mental Health and Recovery",
+    rank: 4,
+    question: "How do I get out of the shame spiral after a bad ADHD day?",
+    response: "Try treating the spiral as a nervous-system event, not a courtroom. First regulate: food, water, movement, quiet, shower, or sleep. Then repair one small thing if needed. The sentence 'I had a hard day, and I can still take the next right step' can be more useful than forcing yourself to feel positive.",
+    suggestedTags: "adhd, shame, emotional-regulation, self-compassion",
+    anchorThreadType: "What helped me",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Emotional regulation thread",
+  },
+  {
+    theme: "Mental Health and Recovery",
+    rank: 5,
+    question: "How do I tell the difference between a meltdown, shutdown, and regular stress?",
+    response: "A rough way to think about it: stress says 'this is hard,' meltdown says 'my system has overflowed outward,' and shutdown says 'my system has powered down inward.' The support is often different. During the moment, reduce input and demands. Afterward, look for triggers and recovery needs instead of debating whether the reaction was reasonable.",
+    suggestedTags: "meltdown, shutdown, autism, regulation, recovery",
+    anchorThreadType: "Resource",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Psychoeducation explainer",
+  },
+  {
+    theme: "Diagnosis and Identity Navigation",
+    rank: 1,
+    question: "Why do I feel grief after diagnosis when I thought I would feel relief?",
+    response: "Relief and grief can arrive together. Diagnosis can explain your life and also make you mourn the years when you were misunderstood, unsupported, or blamed. That does not mean the diagnosis is bad. It means your story is being rewritten with new information, and that can be tender work.",
+    suggestedTags: "diagnosis, grief, late-diagnosis, identity",
+    anchorThreadType: "Open discussion",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Identity anchor discussion",
+  },
+  {
+    theme: "Diagnosis and Identity Navigation",
+    rank: 2,
+    question: "How do I stop masking without blowing up my whole life?",
+    response: "Unmasking does not have to mean becoming unfiltered everywhere overnight. Start with low-risk truth: one sensory preference, one boundary, one honest answer with a safe person. The goal is not to remove every mask immediately. It is to build a life where you need fewer masks to survive.",
+    suggestedTags: "masking, unmasking, identity, boundaries",
+    anchorThreadType: "Open discussion",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Identity practice thread",
+  },
+  {
+    theme: "Diagnosis and Identity Navigation",
+    rank: 3,
+    question: "What if I relate to ADHD or autism content but I do not have a formal diagnosis?",
+    response: "You can use helpful strategies without claiming certainty you do not have. It is okay to say, 'I am exploring whether this fits me.' Track patterns over time, read from credible sources and lived experience, and seek assessment if it is accessible and useful. Support needs are real even while labels are still being clarified.",
+    suggestedTags: "self-identification, diagnosis, assessment, neurodivergent",
+    anchorThreadType: "Start here",
+    timeliness: "Timely/current community topic",
+    communityUse: "Self-discovery resource page",
+  },
+  {
+    theme: "Diagnosis and Identity Navigation",
+    rank: 4,
+    question: "How do I tell people about my diagnosis when I am not ready for their reactions?",
+    response: "You get to choose the level of disclosure. You might share the practical part first: 'I process verbal instructions better when I can also see them written down.' You do not owe everyone your full diagnostic history. A boundary can be both honest and brief.",
+    suggestedTags: "disclosure, diagnosis, boundaries, communication",
+    anchorThreadType: "Script / Template",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Disclosure scripts",
+  },
+  {
+    theme: "Diagnosis and Identity Navigation",
+    rank: 5,
+    question: "How do I rebuild my self-image after years of thinking I was lazy or broken?",
+    response: "Start by changing the explanation, not by demanding instant confidence. Many traits that were called laziness may have been executive function, sensory overload, anxiety, or unsupported difference. Confidence often grows when your life starts fitting your brain better. You are not starting from zero. You are reinterpreting old evidence with a better lens.",
+    suggestedTags: "identity, self-compassion, late-diagnosis, reframing",
+    anchorThreadType: "Open discussion",
+    timeliness: "High emotional relevance",
+    communityUse: "Identity recovery anchor thread",
+  },
+  {
+    theme: "School and Learning Support",
+    rank: 1,
+    question: "What should I put in a one-page profile for my child's teacher?",
+    response: "Keep it practical and kind to the teacher's time. Include: what helps my child learn, what can trigger distress, early warning signs, best communication style, sensory needs, and two strengths the teacher should notice. A good profile is not a full history. It is a quick-start guide for helping your child have a better day.",
+    suggestedTags: "school, teacher-profile, accommodations, parent-advocacy",
+    anchorThreadType: "Template",
+    timeliness: "Back-to-school timely seed",
+    communityUse: "Downloadable template",
+  },
+  {
+    theme: "School and Learning Support",
+    rank: 2,
+    question: "How do we handle homework when my child is already exhausted after school?",
+    response: "Assume the after-school crash is real. Try a decompression block before homework: food, movement, quiet, no interrogation. Then make the task smaller than feels necessary. Ten calm minutes often beats an hour of conflict. If homework regularly costs the whole evening, it may be time to talk to school about adjustments.",
+    suggestedTags: "homework, routines, school, executive-function",
+    anchorThreadType: "What helped me",
+    timeliness: "Evergreen launch seed",
+    communityUse: "Homework support guide",
+  },
+  {
+    theme: "School and Learning Support",
+    rank: 3,
+    question: "How do I ask school for accommodations without sounding like I am making excuses?",
+    response: "Frame accommodations as access to learning, not special treatment. You can say: 'We are trying to reduce barriers so my child can show what they know.' Bring specific examples and specific asks: movement breaks, written instructions, sensory options, chunked assignments, or a check-in point. Specific is harder to dismiss than general worry.",
+    suggestedTags: "school-accommodations, advocacy, scripts, learning-support",
+    anchorThreadType: "Script / Template",
+    timeliness: "Evergreen launch seed",
+    communityUse: "School advocacy scripts",
+  },
+  {
+    theme: "School and Learning Support",
+    rank: 4,
+    question: "What can help with school refusal when pushing harder makes it worse?",
+    response: "School refusal is usually communication from an overloaded system. Look for the reason: bullying, sensory overwhelm, anxiety, transitions, academic shame, or masking fatigue. The first goal is not force. It is understanding the barrier well enough to lower it. Work with school on a gradual, supported return rather than a daily power struggle.",
+    suggestedTags: "school-refusal, anxiety, sensory, parent-support",
+    anchorThreadType: "Open discussion",
+    timeliness: "High emotional relevance",
+    communityUse: "School refusal resource page",
+  },
+  {
+    theme: "School and Learning Support",
+    rank: 5,
+    question: "How do we prepare for the move to secondary school without waiting for things to fall apart?",
+    response: "Start earlier than feels necessary. Visit with your child's needs in mind, write down likely pressure points, ask how support works in practice, and get agreements in writing. Transitions are easier when the receiving school knows the child before the crisis version of the child appears.",
+    suggestedTags: "secondary-transition, school-planning, send, parent-advocacy",
+    anchorThreadType: "Resource",
+    timeliness: "Seasonal/timely school transition seed",
+    communityUse: "Transition checklist",
+  },
+];
+
+const CSV_SEED_THREADS = csvRowsToSeedThreads(QUESTION_RESPONSE_CSV_ROWS);
 
 export const SEED_THREADS: Seed[] = [
   {
@@ -240,6 +489,7 @@ export const SEED_THREADS: Seed[] = [
       { authorId: "seed-sam", body: "Both feelings are real. Both get to exist at once. Take your time.", daysAgo: 12, reactions: { thoughtful: 4 } },
     ],
   },
+  ...CSV_SEED_THREADS,
 ];
 
 export function buildSeedReplies(): {
@@ -253,8 +503,12 @@ export function buildSeedReplies(): {
 
   for (let i = 0; i < SEED_THREADS.length; i++) {
     const s = SEED_THREADS[i];
-    const tid = `seed-thread-${i + 1}`;
-    const created = new Date(now - s.daysAgo * day).toISOString();
+    const tid = s.seedMetadata
+      ? `seed-csv-${normalizeForumTag(s.seedMetadata.theme)}-${s.seedMetadata.rank}`
+      : `seed-thread-${i + 1}`;
+    const created = new Date(
+      now - s.daysAgo * day + (s.minutesOffset ?? 0) * 60_000
+    ).toISOString();
     const tReactions = Object.entries(s.reactions ?? {}).flatMap(
       ([emoji, count]) =>
         Array.from({ length: count ?? 0 }).map((_, k) => ({
@@ -279,12 +533,17 @@ export function buildSeedReplies(): {
       isLocked: false,
       viewCount: 50 + i * 13,
       reactions: tReactions,
+      seedMetadata: s.seedMetadata,
     };
 
     let lastActivity = created;
     (s.replies ?? []).forEach((r, j) => {
       const rid = `seed-reply-${i + 1}-${j + 1}`;
-      const rCreated = new Date(now - r.daysAgo * day + (j + 1) * 60_000).toISOString();
+      const rCreated = new Date(
+        now -
+          r.daysAgo * day +
+          ((r.minutesOffset ?? 0) + j + 1) * 60_000
+      ).toISOString();
       const rReactions = Object.entries(r.reactions ?? {}).flatMap(
         ([emoji, count]) =>
           Array.from({ length: count ?? 0 }).map((_, k) => ({

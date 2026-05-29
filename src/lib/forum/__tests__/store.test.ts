@@ -28,10 +28,42 @@ describe("forum store", () => {
   it("seeds threads and replies on first read", async () => {
     const store = await import("../store");
     const { items, total } = await store.listThreads({ limit: 100 });
-    expect(total).toBeGreaterThanOrEqual(10);
+    expect(total).toBeGreaterThanOrEqual(35);
     expect(items.some((t) => t.author?.handle.endsWith("~"))).toBe(true);
     expect(items.some((t) => t.replyCount > 0)).toBe(true);
     expect(items[0].reactionCounts.care).toBeGreaterThanOrEqual(0);
+  });
+
+  it("includes imported CSV question/response seed threads in the right spaces", async () => {
+    const store = await import("../store");
+    const workplace = await store.listThreads({
+      spaceId: "job seekers",
+      tag: "employment-gaps",
+      limit: 10,
+    });
+    expect(workplace.items).toHaveLength(1);
+    expect(workplace.items[0]).toMatchObject({
+      title:
+        "How do I explain employment gaps without making my ADHD or burnout sound like a liability?",
+      author: expect.objectContaining({ handle: "workplace-guide~" }),
+      seedMetadata: expect.objectContaining({
+        source: "question-response-csv",
+        theme: "Workplace and Career Navigation",
+        rank: 1,
+      }),
+    });
+    expect(workplace.items[0].audienceTags).toContain("job_seekers");
+    expect(workplace.items[0].contentNotes).toContain("unemployment");
+
+    const school = await store.listThreads({
+      spaceId: "educators",
+      tag: "teacher-profile",
+      limit: 10,
+    });
+    expect(school.items).toHaveLength(1);
+    expect(school.items[0].title).toBe(
+      "What should I put in a one-page profile for my child's teacher?"
+    );
   });
 
   it("listSpaceStats covers every seeded space", async () => {
@@ -68,6 +100,16 @@ describe("forum store", () => {
     expect(bodyHit.items.length).toBe(0);
     const tagHit = await store.listThreads({ q: "iep", limit: 10 });
     expect(tagHit.items.some((t) => t.tags.includes("iep"))).toBe(true);
+
+    const metadataHit = await store.listThreads({
+      q: "workplace scripts library",
+      limit: 10,
+    });
+    expect(
+      metadataHit.items.some(
+        (t) => t.seedMetadata?.communityUse === "Workplace scripts library"
+      )
+    ).toBe(true);
   });
 
   it("trendingTags returns counts in descending order", async () => {

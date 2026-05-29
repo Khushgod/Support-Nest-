@@ -24,6 +24,30 @@ export function snippet(body: string, max = 240): string {
   return collapsed.slice(0, max - 1).replace(/\s\S*$/, "") + "…";
 }
 
+export function normalizeForumTag(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+export function splitForumTags(value: string | string[], max = 6): string[] {
+  const raw = Array.isArray(value) ? value : value.split(/[,\s]+/);
+  const seen = new Set<string>();
+  const tags: string[] = [];
+  for (const item of raw) {
+    const tag = normalizeForumTag(item);
+    if (!tag || seen.has(tag)) continue;
+    seen.add(tag);
+    tags.push(tag);
+    if (tags.length >= max) break;
+  }
+  return tags;
+}
+
 const URL_RE = /\bhttps?:\/\/[^\s<>"]+[^\s<>".,;:!?)]/g;
 
 /** Renders body text with link autodetection and paragraph breaks. */

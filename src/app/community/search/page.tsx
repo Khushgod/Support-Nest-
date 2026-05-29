@@ -12,7 +12,9 @@ import {
 } from "@/lib/forum/store";
 import {
   AUDIENCE_LABELS,
+  AUDIENCE_TAGS,
   CONTENT_NOTE_LABELS,
+  CONTENT_NOTES,
   SPACES,
   type AudienceTag,
   type ContentNote,
@@ -63,21 +65,11 @@ export default async function SearchPage({
       ? (sp.space as SpaceId)
       : undefined;
   const audience =
-    sp.audience &&
-    ["parents", "teachers", "nd_adults", "everyone"].includes(sp.audience)
+    sp.audience && AUDIENCE_TAGS.includes(sp.audience as AudienceTag)
       ? (sp.audience as AudienceTag)
       : undefined;
   const cn =
-    sp.cn &&
-    [
-      "burnout",
-      "diagnosis",
-      "meltdown",
-      "school-stress",
-      "medical",
-      "grief",
-      "anxiety",
-    ].includes(sp.cn)
+    sp.cn && CONTENT_NOTES.includes(sp.cn as ContentNote)
       ? (sp.cn as ContentNote)
       : undefined;
   const tag = sp.tag?.trim() || undefined;
@@ -208,9 +200,7 @@ export default async function SearchPage({
                 aria-label="Audience"
               >
                 <option value="">Any audience</option>
-                {(
-                  ["parents", "teachers", "nd_adults", "everyone"] as AudienceTag[]
-                ).map((a) => (
+                {AUDIENCE_TAGS.map((a) => (
                   <option key={a} value={a}>
                     {AUDIENCE_LABELS[a]}
                   </option>

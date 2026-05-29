@@ -10,6 +10,7 @@ const AUD_CLASS: Record<AudienceTag, string> = {
   teachers: "bg-lavender-100 text-lavender-700",
   nd_adults: "bg-sun-100 text-sun-800",
   everyone: "bg-cream-200 text-slate-700",
+  job_seekers: "bg-emerald-100 text-emerald-800",
 };
 
 export function AudienceChip({ tag }: { tag: AudienceTag }) {

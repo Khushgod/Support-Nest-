@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import {
   AUDIENCE_LABELS,
+  AUDIENCE_TAGS,
   CONTENT_NOTE_LABELS,
   SPACES,
   type AudienceTag,
@@ -18,9 +19,7 @@ const DRAFT_KEY = "supportnest_thread_draft_v1";
 
 const AUDIENCE_OPTIONS: AudienceTag[] = [
   "everyone",
-  "parents",
-  "teachers",
-  "nd_adults",
+  ...AUDIENCE_TAGS.filter((tag) => tag !== "everyone"),
 ];
 
 const NOTE_ENTRIES = Object.entries(CONTENT_NOTE_LABELS) as [
