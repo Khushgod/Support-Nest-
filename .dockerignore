@@ -1,0 +1,15 @@
+.git
+.gitignore
+.next
+node_modules
+.data
+*.db
+*.db-shm
+*.db-wal
+.env*
+!.env.production
+npm-debug.log*
+README.md
+CLAUDE.md
+AGENTS.md
+walkthrough

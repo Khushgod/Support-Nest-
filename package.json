@@ -12,8 +12,8 @@
     "accuracy": "vitest run src/lib/__tests__/accuracy.test.ts --reporter=verbose",
     "walkthrough:capture": "tsx walkthrough/scripts/capture.ts",
     "walkthrough:html": "tsx walkthrough/scripts/build-html.ts",
-    "walkthrough:pdf": "tsx walkthrough/scripts/build-pdf.ts",
-    "walkthrough": "npm run walkthrough:capture && npm run walkthrough:html && npm run walkthrough:pdf"
+    "walkthrough:pdf": "tsx walkthrough/scripts/build-pdf.ts",                                                                                                
+    "walkthrough": "npm run walkthrough:capture && npm run walkthrough:html && n` pm run walkthrough:pdf"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

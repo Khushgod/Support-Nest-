@@ -17,10 +17,15 @@ export const OLLAMA_MODEL =
 const DEFAULT_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS ?? 60_000);
 const MAX_ATTEMPTS = 3;
 
-const client = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-  timeout: DEFAULT_TIMEOUT_MS,
-});
+function getClient() {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "The GROQ_API_KEY environment variable is missing or empty. Add it to your .env.local or runtime environment."
+    );
+  }
+  return new Groq({ apiKey, timeout: DEFAULT_TIMEOUT_MS });
+}
 
 // Kept the same name so analyze/route.ts doesn't need changes
 export class OllamaUnavailableError extends Error {
@@ -55,6 +60,7 @@ export async function generateJson<T = unknown>(
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
+      const client = getClient();
       const response = await client.chat.completions.create({
         model,
         temperature: args.temperature ?? 0.2,
@@ -72,6 +78,7 @@ export async function generateJson<T = unknown>(
         return JSON.parse(stripCodeFences(raw)) as T;
       } catch {
         // One-shot JSON-correction retry
+        const client = getClient();
         const retry = await client.chat.completions.create({
           model,
           temperature: 0,
@@ -117,6 +124,7 @@ export async function generateText(args: GenerateJsonArgs): Promise<string> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
+      const client = getClient();
       const response = await client.chat.completions.create({
         model,
         temperature: args.temperature ?? 0.3,
@@ -157,6 +165,7 @@ export async function ensureModelAvailable(
   }
   try {
     // Lightweight call to verify connectivity
+    const client = getClient();
     await client.chat.completions.create({
       model,
       max_tokens: 1,

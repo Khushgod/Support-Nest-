@@ -112,7 +112,25 @@ function seedIfNeeded() {
   })();
 }
 
-seedIfNeeded();
+try {
+  const alreadySeeded = db
+    .prepare("SELECT 1 FROM threads LIMIT 1")
+    .get();
+  if (!alreadySeeded) {
+    seedIfNeeded();
+  }
+} catch (err: unknown) {
+  if (
+    err instanceof Error &&
+    err.message.includes("SQLITE_BUSY")
+  ) {
+    // During concurrent build worker startup, one worker may hold the write
+    // lock while another initializes. If the database is already being
+    // populated, proceed and let the next worker read the seeded data.
+  } else {
+    throw err;
+  }
+}
 
 type ThreadRow = {
   id: string;

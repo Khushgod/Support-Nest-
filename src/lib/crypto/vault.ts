@@ -25,7 +25,7 @@ const KEY_LEN = 32;
 
 const VAULT_DIR =
   process.env.SUPPORTNEST_VAULT_DIR ||
-  path.join(process.cwd(), ".data", "vault");
+  path.join(/*turbopackIgnore: true*/ process.cwd(), ".data", "vault");
 
 function getMasterKey(): Buffer {
   const raw = process.env.SUPPORTNEST_DATA_KEY;

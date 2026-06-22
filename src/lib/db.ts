@@ -7,15 +7,16 @@ import path from "node:path";
 // Persist the SQLite database on disk. For EC2, set SUPPORTNEST_DATA_DIR to a
 // persistent mounted path such as /var/lib/geneTranslate or /mnt/data/geneTranslate.
 const DATA_DIR =
-  process.env.SUPPORTNEST_DATA_DIR || path.join(process.cwd(), ".data");
+  process.env.SUPPORTNEST_DATA_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), ".data");
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const DB_PATH = path.join(DATA_DIR, "sagenest.db");
 
-const db = new Database(DB_PATH);
+const db = new Database(DB_PATH, { timeout: 30000 });
 
 db.pragma("journal_mode = WAL");
+db.pragma("busy_timeout = 30000");
 db.pragma("foreign_keys = ON");
 
 db.exec(`
