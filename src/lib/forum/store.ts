@@ -1,8 +1,7 @@
 import "server-only";
 
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import crypto from "node:crypto";
+import db from "@/lib/db";
 import {
   emptyReactionCounts,
   REACTION_ORDER,
@@ -12,7 +11,6 @@ import {
   type Bookmark,
   type ContentNote,
   type Follow,
-  type ForumStore,
   type ReactionEmoji,
   type Reply,
   type ReplyView,
@@ -24,110 +22,235 @@ import { findById, type SafeUser } from "@/lib/auth/users";
 import { buildSeedReplies, SEED_USERS } from "./seed";
 import { splitForumTags } from "./format";
 
-/**
- * File-backed forum store. Same atomic-write pattern as the user store.
- *
- * Concurrency: single-process is fine. For multi-process / high-load we'd
- * swap in a real database; the API surface here would stay the same.
- */
-
-const DATA_DIR =
-  process.env.SUPPORTNEST_DATA_DIR || path.join(process.cwd(), ".data");
-const FORUM_FILE = path.join(DATA_DIR, "forum.json");
-
-function buildSeedStore(): ForumStore {
+function seedIfNeeded() {
   const { threads, replies } = buildSeedReplies();
+
+  const insertSeedUser = db.prepare(
+    `INSERT OR IGNORE INTO seed_users (id, display_name, handle, role)
+     VALUES (?, ?, ?, ?)`
+  );
+  const insertThread = db.prepare(`
+    INSERT OR IGNORE INTO threads
+      (id, space_id, author_id, title, body, created_at, updated_at,
+       last_activity_at, is_pinned, is_locked, view_count,
+       seed_source, seed_theme, seed_rank, seed_anchor_type,
+       seed_timeliness, seed_community_use)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const insertTag = db.prepare(
+    `INSERT OR IGNORE INTO thread_tags (thread_id, tag) VALUES (?, ?)`
+  );
+  const insertAudience = db.prepare(
+    `INSERT OR IGNORE INTO thread_audience_tags (thread_id, audience_tag)
+     VALUES (?, ?)`
+  );
+  const insertNote = db.prepare(
+    `INSERT OR IGNORE INTO thread_content_notes (thread_id, content_note)
+     VALUES (?, ?)`
+  );
+  const insertThreadReaction = db.prepare(
+    `INSERT OR IGNORE INTO thread_reactions (thread_id, user_id, emoji)
+     VALUES (?, ?, ?)`
+  );
+  const insertReply = db.prepare(`
+    INSERT OR IGNORE INTO replies
+      (id, thread_id, author_id, body, created_at, parent_reply_id)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  const insertReplyReaction = db.prepare(
+    `INSERT OR IGNORE INTO reply_reactions (reply_id, user_id, emoji)
+     VALUES (?, ?, ?)`
+  );
+
+  db.transaction(() => {
+    for (const u of SEED_USERS) {
+      insertSeedUser.run(u.id, u.displayName, u.handle, u.role);
+    }
+
+    for (const t of threads) {
+      const sm = t.seedMetadata;
+      insertThread.run(
+        t.id,
+        t.spaceId,
+        t.authorId,
+        t.title,
+        t.body,
+        t.createdAt,
+        t.updatedAt,
+        t.lastActivityAt,
+        t.isPinned ? 1 : 0,
+        t.isLocked ? 1 : 0,
+        t.viewCount,
+        sm?.source ?? null,
+        sm?.theme ?? null,
+        sm?.rank ?? null,
+        sm?.anchorThreadType ?? null,
+        sm?.timeliness ?? null,
+        sm?.communityUse ?? null
+      );
+      for (const tag of t.tags) insertTag.run(t.id, tag);
+      for (const at of t.audienceTags) insertAudience.run(t.id, at);
+      for (const cn of t.contentNotes) insertNote.run(t.id, cn);
+      for (const rx of t.reactions) {
+        insertThreadReaction.run(t.id, rx.userId, rx.emoji);
+      }
+    }
+
+    for (const r of replies) {
+      insertReply.run(
+        r.id,
+        r.threadId,
+        r.authorId,
+        r.body,
+        r.createdAt,
+        r.parentReplyId ?? null
+      );
+      for (const rx of r.reactions) {
+        insertReplyReaction.run(r.id, rx.userId, rx.emoji);
+      }
+    }
+  })();
+}
+
+seedIfNeeded();
+
+type ThreadRow = {
+  id: string;
+  space_id: string;
+  author_id: string;
+  title: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  last_activity_at: string;
+  is_pinned: number;
+  is_locked: number;
+  view_count: number;
+  seed_source: string | null;
+  seed_theme: string | null;
+  seed_rank: number | null;
+  seed_anchor_type: string | null;
+  seed_timeliness: string | null;
+  seed_community_use: string | null;
+};
+
+type ReplyRow = {
+  id: string;
+  thread_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  parent_reply_id: string | null;
+};
+
+type ReactionRow = { user_id: string; emoji: string };
+
+function rowToThread(row: ThreadRow): Thread {
+  const tags = (
+    db
+      .prepare("SELECT tag FROM thread_tags WHERE thread_id = ?")
+      .all(row.id) as { tag: string }[]
+  ).map((r) => r.tag);
+  const audienceTags = (
+    db
+      .prepare(
+        "SELECT audience_tag FROM thread_audience_tags WHERE thread_id = ?"
+      )
+      .all(row.id) as { audience_tag: string }[]
+  ).map((r) => r.audience_tag as AudienceTag);
+  const contentNotes = (
+    db
+      .prepare(
+        "SELECT content_note FROM thread_content_notes WHERE thread_id = ?"
+      )
+      .all(row.id) as { content_note: string }[]
+  ).map((r) => r.content_note as ContentNote);
+  const reactions = (
+    db
+      .prepare("SELECT user_id, emoji FROM thread_reactions WHERE thread_id = ?")
+      .all(row.id) as ReactionRow[]
+  ).map((r) => ({ userId: r.user_id, emoji: r.emoji as ReactionEmoji }));
+
   return {
-    version: 1,
-    threads,
-    replies,
-    bookmarks: [],
-    follows: [],
-    seedUsers: SEED_USERS,
+    id: row.id,
+    spaceId: row.space_id as SpaceId,
+    authorId: row.author_id,
+    title: row.title,
+    body: row.body,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    lastActivityAt: row.last_activity_at,
+    isPinned: row.is_pinned === 1,
+    isLocked: row.is_locked === 1,
+    viewCount: row.view_count,
+    tags,
+    audienceTags,
+    contentNotes,
+    reactions,
+    seedMetadata: row.seed_source
+      ? {
+          source: row.seed_source as "question-response-csv",
+          theme: row.seed_theme ?? "",
+          rank: row.seed_rank ?? 0,
+          anchorThreadType: row.seed_anchor_type ?? "",
+          timeliness: row.seed_timeliness ?? "",
+          communityUse: row.seed_community_use ?? "",
+        }
+      : undefined,
   };
 }
 
-function mergeSeedRecords(store: ForumStore): {
-  store: ForumStore;
-  changed: boolean;
-} {
-  const seed = buildSeedStore();
-  let changed = false;
+function rowToReply(row: ReplyRow): Reply {
+  const reactions = (
+    db
+      .prepare("SELECT user_id, emoji FROM reply_reactions WHERE reply_id = ?")
+      .all(row.id) as ReactionRow[]
+  ).map((r) => ({ userId: r.user_id, emoji: r.emoji as ReactionEmoji }));
 
-  const userIds = new Set(store.seedUsers.map((u) => u.id));
-  for (const user of seed.seedUsers) {
-    if (!userIds.has(user.id)) {
-      store.seedUsers.push(user);
-      changed = true;
-    }
-  }
-
-  const threadIds = new Set(store.threads.map((t) => t.id));
-  for (const thread of seed.threads) {
-    if (!threadIds.has(thread.id)) {
-      store.threads.push(thread);
-      changed = true;
-    }
-  }
-
-  const replyIds = new Set(store.replies.map((r) => r.id));
-  for (const reply of seed.replies) {
-    if (!replyIds.has(reply.id)) {
-      store.replies.push(reply);
-      changed = true;
-    }
-  }
-
-  return { store, changed };
+  return {
+    id: row.id,
+    threadId: row.thread_id,
+    authorId: row.author_id,
+    body: row.body,
+    createdAt: row.created_at,
+    parentReplyId: row.parent_reply_id ?? undefined,
+    reactions,
+  };
 }
 
-async function ensureSeeded(): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  try {
-    await fs.access(FORUM_FILE);
-    return;
-  } catch {
-    // doesn't exist; seed
+function safeUserToAuthor(u: SafeUser): Author {
+  const first = u.name.split(" ")[0];
+  const last = u.name.split(" ").slice(1).join(" ");
+  const handle = last ? `${first} ${last[0]}.` : first;
+  return { id: u.id, displayName: u.name, handle, role: u.role };
+}
+
+async function hydrateAuthor(
+  authorId: string,
+  cache: Map<string, Author | null>
+): Promise<Author | null> {
+  if (cache.has(authorId)) return cache.get(authorId) ?? null;
+
+  const seed = db
+    .prepare("SELECT * FROM seed_users WHERE id = ?")
+    .get(authorId) as
+    | { id: string; display_name: string; handle: string; role: string }
+    | undefined;
+  if (seed) {
+    const author: Author = {
+      id: seed.id,
+      displayName: seed.display_name,
+      handle: seed.handle,
+      role: seed.role,
+    };
+    cache.set(authorId, author);
+    return author;
   }
-  const seed = buildSeedStore();
-  await fs.writeFile(FORUM_FILE, JSON.stringify(seed, null, 2), { mode: 0o600 });
-}
 
-async function read(): Promise<ForumStore> {
-  await ensureSeeded();
-  const raw = await fs.readFile(FORUM_FILE, "utf8");
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && parsed.version === 1) {
-      const merged = mergeSeedRecords(parsed as ForumStore);
-      if (merged.changed) await write(merged.store);
-      return merged.store;
-    }
-  } catch {
-    // fall through
-  }
-  return buildSeedStore();
-}
-
-async function write(store: ForumStore): Promise<void> {
-  const tmp = FORUM_FILE + ".tmp";
-  await fs.writeFile(tmp, JSON.stringify(store, null, 2), { mode: 0o600 });
-  await fs.rename(tmp, FORUM_FILE);
-}
-
-// In-process write lock so concurrent server actions can't tear the JSON.
-let writeChain: Promise<unknown> = Promise.resolve();
-function withWriteLock<T>(fn: () => Promise<T>): Promise<T> {
-  const next = writeChain.then(() => fn());
-  writeChain = next.catch(() => undefined);
-  return next;
-}
-
-function authorFor(store: ForumStore, id: string): Author | null {
-  const seed = store.seedUsers.find((u) => u.id === id);
-  if (seed) return seed;
-  // Real users are looked up async by the view layer.
-  return null;
+  const u = await findById(authorId);
+  const author = u ? safeUserToAuthor(u) : null;
+  cache.set(authorId, author);
+  return author;
 }
 
 function reactionCounts(reactions: { emoji: ReactionEmoji }[]) {
@@ -140,38 +263,6 @@ function reactionCounts(reactions: { emoji: ReactionEmoji }[]) {
 
 function totalReactions(counts: Record<ReactionEmoji, number>) {
   return REACTION_ORDER.reduce((a, k) => a + counts[k], 0);
-}
-
-async function hydrateAuthor(
-  store: ForumStore,
-  authorId: string,
-  liveCache: Map<string, Author | null>
-): Promise<Author | null> {
-  if (liveCache.has(authorId)) return liveCache.get(authorId) ?? null;
-  const seed = authorFor(store, authorId);
-  if (seed) {
-    liveCache.set(authorId, seed);
-    return seed;
-  }
-  const u = await findById(authorId);
-  const author = u ? safeUserToAuthor(u) : null;
-  liveCache.set(authorId, author);
-  return author;
-}
-
-function safeUserToAuthor(u: SafeUser): Author {
-  const first = u.name.split(" ")[0];
-  const last = u.name.split(" ").slice(1).join(" ");
-  const handle =
-    last
-      ? `${first} ${last[0]}.`
-      : first;
-  return {
-    id: u.id,
-    displayName: u.name,
-    handle,
-    role: u.role,
-  };
 }
 
 export type ThreadFilters = {
@@ -188,117 +279,186 @@ export type ThreadFilters = {
   offset?: number;
 };
 
-function score(t: Thread, replies: Reply[]) {
-  return {
-    replies: replies.filter((r) => r.threadId === t.id).length,
-    reactions: t.reactions.length,
-  };
-}
-
 export async function listThreads(
   filters: ThreadFilters = {}
 ): Promise<{ items: ThreadView[]; total: number }> {
-  const store = await read();
-  let items = store.threads.slice();
+  let rows = db.prepare("SELECT * FROM threads").all() as ThreadRow[];
 
-  if (filters.spaceId) items = items.filter((t) => t.spaceId === filters.spaceId);
-  if (filters.audience)
-    items = items.filter((t) => t.audienceTags.includes(filters.audience!));
-  if (filters.contentNote)
-    items = items.filter((t) => t.contentNotes.includes(filters.contentNote!));
-  if (filters.tag) items = items.filter((t) => t.tags.includes(filters.tag!));
-  if (filters.authorId)
-    items = items.filter((t) => t.authorId === filters.authorId);
-  if (filters.bookmarkedBy) {
-    const ids = new Set(
-      store.bookmarks
-        .filter((b) => b.userId === filters.bookmarkedBy)
-        .map((b) => b.threadId)
-    );
-    items = items.filter((t) => ids.has(t.id));
+  if (filters.spaceId) {
+    rows = rows.filter((r) => r.space_id === filters.spaceId);
   }
+
+  if (filters.audience) {
+    rows = rows.filter(
+      (r) =>
+        db
+          .prepare(
+            "SELECT 1 FROM thread_audience_tags WHERE thread_id = ? AND audience_tag = ?"
+          )
+          .get(r.id, filters.audience) != null
+    );
+  }
+
+  if (filters.contentNote) {
+    rows = rows.filter(
+      (r) =>
+        db
+          .prepare(
+            "SELECT 1 FROM thread_content_notes WHERE thread_id = ? AND content_note = ?"
+          )
+          .get(r.id, filters.contentNote) != null
+    );
+  }
+
+  if (filters.tag) {
+    rows = rows.filter(
+      (r) =>
+        db
+          .prepare("SELECT 1 FROM thread_tags WHERE thread_id = ? AND tag = ?")
+          .get(r.id, filters.tag) != null
+    );
+  }
+
+  if (filters.authorId) {
+    rows = rows.filter((r) => r.author_id === filters.authorId);
+  }
+
+  if (filters.bookmarkedBy) {
+    const bookmarked = new Set(
+      (
+        db
+          .prepare("SELECT thread_id FROM bookmarks WHERE user_id = ?")
+          .all(filters.bookmarkedBy) as { thread_id: string }[]
+      ).map((b) => b.thread_id)
+    );
+    rows = rows.filter((r) => bookmarked.has(r.id));
+  }
+
   if (filters.q) {
     const needle = filters.q.toLowerCase();
-    items = items.filter(
-      (t) =>
-        t.title.toLowerCase().includes(needle) ||
-        t.body.toLowerCase().includes(needle) ||
-        t.tags.some((tag) => tag.toLowerCase().includes(needle)) ||
+    rows = rows.filter(
+      (r) =>
+        r.title.toLowerCase().includes(needle) ||
+        r.body.toLowerCase().includes(needle) ||
+        db
+          .prepare(
+            "SELECT 1 FROM thread_tags WHERE thread_id = ? AND LOWER(tag) LIKE ?"
+          )
+          .get(r.id, `%${needle}%`) != null ||
         [
-          t.seedMetadata?.theme,
-          t.seedMetadata?.anchorThreadType,
-          t.seedMetadata?.timeliness,
-          t.seedMetadata?.communityUse,
+          r.seed_theme,
+          r.seed_anchor_type,
+          r.seed_timeliness,
+          r.seed_community_use,
         ].some((value) => value?.toLowerCase().includes(needle))
     );
   }
 
   const sort = filters.sort ?? "latest";
-  items.sort((a, b) => {
-    if (filters.pinnedFirst !== false) {
-      if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+  rows.sort((a, b) => {
+    if (filters.pinnedFirst !== false && a.is_pinned !== b.is_pinned) {
+      return a.is_pinned ? -1 : 1;
     }
-    if (sort === "newest") return b.createdAt.localeCompare(a.createdAt);
+    if (sort === "newest") return b.created_at.localeCompare(a.created_at);
     if (sort === "most-replies") {
-      const sa = score(a, store.replies);
-      const sb = score(b, store.replies);
-      return sb.replies - sa.replies;
+      const ra = (
+        db
+          .prepare("SELECT COUNT(*) as c FROM replies WHERE thread_id = ?")
+          .get(a.id) as { c: number }
+      ).c;
+      const rb = (
+        db
+          .prepare("SELECT COUNT(*) as c FROM replies WHERE thread_id = ?")
+          .get(b.id) as { c: number }
+      ).c;
+      return rb - ra;
     }
     if (sort === "most-reactions") {
-      return b.reactions.length - a.reactions.length;
+      const ra = (
+        db
+          .prepare(
+            "SELECT COUNT(*) as c FROM thread_reactions WHERE thread_id = ?"
+          )
+          .get(a.id) as { c: number }
+      ).c;
+      const rb = (
+        db
+          .prepare(
+            "SELECT COUNT(*) as c FROM thread_reactions WHERE thread_id = ?"
+          )
+          .get(b.id) as { c: number }
+      ).c;
+      return rb - ra;
     }
-    return b.lastActivityAt.localeCompare(a.lastActivityAt);
+    return b.last_activity_at.localeCompare(a.last_activity_at);
   });
 
-  const total = items.length;
+  const total = rows.length;
   const offset = filters.offset ?? 0;
   const limit = filters.limit ?? 25;
-  items = items.slice(offset, offset + limit);
-
+  const page = rows.slice(offset, offset + limit);
   const cache = new Map<string, Author | null>();
-  const enriched: ThreadView[] = await Promise.all(
-    items.map(async (t) => {
-      const replies = store.replies.filter((r) => r.threadId === t.id);
-      const author = await hydrateAuthor(store, t.authorId, cache);
+
+  const items: ThreadView[] = await Promise.all(
+    page.map(async (row) => {
+      const t = rowToThread(row);
+      const replyCount = (
+        db
+          .prepare("SELECT COUNT(*) as c FROM replies WHERE thread_id = ?")
+          .get(t.id) as { c: number }
+      ).c;
+      const lastReplyAt =
+        (
+          db
+            .prepare("SELECT MAX(created_at) as la FROM replies WHERE thread_id = ?")
+            .get(t.id) as { la: string | null }
+        ).la ?? undefined;
+      const author = await hydrateAuthor(t.authorId, cache);
       const counts = reactionCounts(t.reactions);
       return {
         ...t,
         author,
-        replyCount: replies.length,
+        replyCount,
         reactionCounts: counts,
         totalReactions: totalReactions(counts),
-        lastReplyAt: replies
-          .map((r) => r.createdAt)
-          .sort()
-          .at(-1),
+        lastReplyAt,
         spaceName: SPACE_BY_ID[t.spaceId].name,
       };
     })
   );
 
-  return { items: enriched, total };
+  return { items, total };
 }
 
-export async function getThread(
-  threadId: string
-): Promise<ThreadView | null> {
-  const store = await read();
-  const t = store.threads.find((x) => x.id === threadId);
-  if (!t) return null;
-  const replies = store.replies.filter((r) => r.threadId === t.id);
+export async function getThread(threadId: string): Promise<ThreadView | null> {
+  const row = db
+    .prepare("SELECT * FROM threads WHERE id = ?")
+    .get(threadId) as ThreadRow | undefined;
+  if (!row) return null;
+
+  const t = rowToThread(row);
+  const replyCount = (
+    db
+      .prepare("SELECT COUNT(*) as c FROM replies WHERE thread_id = ?")
+      .get(t.id) as { c: number }
+  ).c;
+  const lastReplyAt =
+    (
+      db
+        .prepare("SELECT MAX(created_at) as la FROM replies WHERE thread_id = ?")
+        .get(t.id) as { la: string | null }
+    ).la ?? undefined;
   const cache = new Map<string, Author | null>();
-  const author = await hydrateAuthor(store, t.authorId, cache);
+  const author = await hydrateAuthor(t.authorId, cache);
   const counts = reactionCounts(t.reactions);
+
   return {
     ...t,
     author,
-    replyCount: replies.length,
+    replyCount,
     reactionCounts: counts,
     totalReactions: totalReactions(counts),
-    lastReplyAt: replies
-      .map((r) => r.createdAt)
-      .sort()
-      .at(-1),
+    lastReplyAt,
     spaceName: SPACE_BY_ID[t.spaceId].name,
   };
 }
@@ -306,14 +466,15 @@ export async function getThread(
 export async function getRepliesForThread(
   threadId: string
 ): Promise<ReplyView[]> {
-  const store = await read();
-  const replies = store.replies
-    .filter((r) => r.threadId === threadId)
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const rows = db
+    .prepare("SELECT * FROM replies WHERE thread_id = ? ORDER BY created_at ASC")
+    .all(threadId) as ReplyRow[];
   const cache = new Map<string, Author | null>();
+
   return Promise.all(
-    replies.map(async (r) => {
-      const author = await hydrateAuthor(store, r.authorId, cache);
+    rows.map(async (row) => {
+      const r = rowToReply(row);
+      const author = await hydrateAuthor(r.authorId, cache);
       const counts = reactionCounts(r.reactions);
       return {
         ...r,
@@ -328,45 +489,57 @@ export async function getRepliesForThread(
 export async function listTrendingTags(
   limit = 10
 ): Promise<{ tag: string; count: number }[]> {
-  const store = await read();
-  const counts = new Map<string, number>();
-  for (const t of store.threads) {
-    for (const tag of t.tags) {
-      counts.set(tag, (counts.get(tag) ?? 0) + 1);
-    }
-  }
-  return Array.from(counts.entries())
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, limit);
+  return db
+    .prepare(
+      `SELECT tag, COUNT(*) as count
+       FROM thread_tags
+       GROUP BY tag
+       ORDER BY count DESC
+       LIMIT ?`
+    )
+    .all(limit) as { tag: string; count: number }[];
 }
 
 export async function listSpaceStats(): Promise<
   Record<SpaceId, { threads: number; replies: number; lastActivityAt?: string }>
 > {
-  const store = await read();
-  const acc: Record<string, { threads: number; replies: number; lastActivityAt?: string }> = {};
-  for (const t of store.threads) {
-    if (!acc[t.spaceId])
-      acc[t.spaceId] = { threads: 0, replies: 0 };
-    acc[t.spaceId].threads += 1;
-    if (
-      !acc[t.spaceId].lastActivityAt ||
-      t.lastActivityAt > acc[t.spaceId].lastActivityAt!
-    ) {
-      acc[t.spaceId].lastActivityAt = t.lastActivityAt;
-    }
+  const threadStats = db
+    .prepare(
+      `SELECT space_id, COUNT(*) as threads, MAX(last_activity_at) as lastActivityAt
+       FROM threads
+       GROUP BY space_id`
+    )
+    .all() as {
+    space_id: string;
+    threads: number;
+    lastActivityAt: string | null;
+  }[];
+  const replyStats = db
+    .prepare(
+      `SELECT t.space_id, COUNT(r.id) as replies
+       FROM replies r
+       JOIN threads t ON t.id = r.thread_id
+       GROUP BY t.space_id`
+    )
+    .all() as { space_id: string; replies: number }[];
+
+  const acc: Record<
+    string,
+    { threads: number; replies: number; lastActivityAt?: string }
+  > = {};
+  for (const row of threadStats) {
+    acc[row.space_id] = {
+      threads: row.threads,
+      replies: 0,
+      lastActivityAt: row.lastActivityAt ?? undefined,
+    };
   }
-  for (const r of store.replies) {
-    const t = store.threads.find((x) => x.id === r.threadId);
-    if (!t) continue;
-    if (!acc[t.spaceId]) acc[t.spaceId] = { threads: 0, replies: 0 };
-    acc[t.spaceId].replies += 1;
+  for (const row of replyStats) {
+    if (acc[row.space_id]) acc[row.space_id].replies = row.replies;
   }
+
   return acc as Record<SpaceId, (typeof acc)[string]>;
 }
-
-// ---------- Mutations ----------
 
 export type CreateThreadInput = {
   authorId: string;
@@ -378,33 +551,65 @@ export type CreateThreadInput = {
   contentNotes?: ContentNote[];
 };
 
-export async function createThread(
-  input: CreateThreadInput
-): Promise<Thread> {
-  return withWriteLock(async () => {
-    const store = await read();
-    const now = new Date().toISOString();
-    const thread: Thread = {
-      id: `thr_${crypto.randomUUID()}`,
-      spaceId: input.spaceId,
-      authorId: input.authorId,
-      title: input.title.trim(),
-      body: input.body.trim(),
-      createdAt: now,
-      updatedAt: now,
-      lastActivityAt: now,
-      tags: splitForumTags(input.tags ?? [], 6),
-      audienceTags: input.audienceTags ?? ["everyone"],
-      contentNotes: input.contentNotes ?? [],
-      isPinned: false,
-      isLocked: false,
-      viewCount: 0,
-      reactions: [],
-    };
-    store.threads.push(thread);
-    await write(store);
-    return thread;
-  });
+export async function createThread(input: CreateThreadInput): Promise<Thread> {
+  const now = new Date().toISOString();
+  const id = `thr_${crypto.randomUUID()}`;
+  const tags = splitForumTags(input.tags ?? [], 6);
+  const audienceTags = input.audienceTags ?? ["everyone"];
+  const contentNotes = input.contentNotes ?? [];
+
+  db.transaction(() => {
+    db.prepare(
+      `INSERT INTO threads
+        (id, space_id, author_id, title, body, created_at, updated_at,
+         last_activity_at, is_pinned, is_locked, view_count)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0)`
+    ).run(
+      id,
+      input.spaceId,
+      input.authorId,
+      input.title.trim(),
+      input.body.trim(),
+      now,
+      now,
+      now
+    );
+    for (const tag of tags) {
+      db.prepare(
+        "INSERT OR IGNORE INTO thread_tags (thread_id, tag) VALUES (?, ?)"
+      ).run(id, tag);
+    }
+    for (const at of audienceTags) {
+      db.prepare(
+        `INSERT OR IGNORE INTO thread_audience_tags (thread_id, audience_tag)
+         VALUES (?, ?)`
+      ).run(id, at);
+    }
+    for (const cn of contentNotes) {
+      db.prepare(
+        `INSERT OR IGNORE INTO thread_content_notes (thread_id, content_note)
+         VALUES (?, ?)`
+      ).run(id, cn);
+    }
+  })();
+
+  return {
+    id,
+    spaceId: input.spaceId,
+    authorId: input.authorId,
+    title: input.title.trim(),
+    body: input.body.trim(),
+    createdAt: now,
+    updatedAt: now,
+    lastActivityAt: now,
+    tags,
+    audienceTags,
+    contentNotes,
+    isPinned: false,
+    isLocked: false,
+    viewCount: 0,
+    reactions: [],
+  };
 }
 
 export async function createReply(input: {
@@ -413,26 +618,43 @@ export async function createReply(input: {
   body: string;
   parentReplyId?: string;
 }): Promise<Reply> {
-  return withWriteLock(async () => {
-    const store = await read();
-    const t = store.threads.find((x) => x.id === input.threadId);
-    if (!t) throw new Error("THREAD_NOT_FOUND");
-    if (t.isLocked) throw new Error("THREAD_LOCKED");
-    const now = new Date().toISOString();
-    const reply: Reply = {
-      id: `rep_${crypto.randomUUID()}`,
-      threadId: t.id,
-      authorId: input.authorId,
-      body: input.body.trim(),
-      createdAt: now,
-      parentReplyId: input.parentReplyId,
-      reactions: [],
-    };
-    store.replies.push(reply);
-    t.lastActivityAt = now;
-    await write(store);
-    return reply;
-  });
+  const t = db
+    .prepare("SELECT id, is_locked FROM threads WHERE id = ?")
+    .get(input.threadId) as { id: string; is_locked: number } | undefined;
+  if (!t) throw new Error("THREAD_NOT_FOUND");
+  if (t.is_locked) throw new Error("THREAD_LOCKED");
+
+  const now = new Date().toISOString();
+  const id = `rep_${crypto.randomUUID()}`;
+
+  db.transaction(() => {
+    db.prepare(
+      `INSERT INTO replies
+        (id, thread_id, author_id, body, created_at, parent_reply_id)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(
+      id,
+      input.threadId,
+      input.authorId,
+      input.body.trim(),
+      now,
+      input.parentReplyId ?? null
+    );
+    db.prepare("UPDATE threads SET last_activity_at = ? WHERE id = ?").run(
+      now,
+      input.threadId
+    );
+  })();
+
+  return {
+    id,
+    threadId: input.threadId,
+    authorId: input.authorId,
+    body: input.body.trim(),
+    createdAt: now,
+    parentReplyId: input.parentReplyId,
+    reactions: [],
+  };
 }
 
 export async function toggleReaction(input: {
@@ -441,89 +663,110 @@ export async function toggleReaction(input: {
   targetId: string;
   emoji: ReactionEmoji;
 }): Promise<{ added: boolean }> {
-  return withWriteLock(async () => {
-    const store = await read();
-    const target =
-      input.targetType === "thread"
-        ? store.threads.find((t) => t.id === input.targetId)
-        : store.replies.find((r) => r.id === input.targetId);
+  if (input.targetType === "thread") {
+    const target = db
+      .prepare("SELECT 1 FROM threads WHERE id = ?")
+      .get(input.targetId);
     if (!target) throw new Error("TARGET_NOT_FOUND");
-    const i = target.reactions.findIndex(
-      (r) => r.userId === input.userId && r.emoji === input.emoji
-    );
-    let added = false;
-    if (i >= 0) {
-      target.reactions.splice(i, 1);
-    } else {
-      target.reactions.push({ userId: input.userId, emoji: input.emoji });
-      added = true;
+
+    const exists = db
+      .prepare(
+        `SELECT 1 FROM thread_reactions
+         WHERE thread_id = ? AND user_id = ? AND emoji = ?`
+      )
+      .get(input.targetId, input.userId, input.emoji);
+    if (exists) {
+      db.prepare(
+        `DELETE FROM thread_reactions
+         WHERE thread_id = ? AND user_id = ? AND emoji = ?`
+      ).run(input.targetId, input.userId, input.emoji);
+      return { added: false };
     }
-    await write(store);
-    return { added };
-  });
+    db.prepare(
+      `INSERT INTO thread_reactions (thread_id, user_id, emoji)
+       VALUES (?, ?, ?)`
+    ).run(input.targetId, input.userId, input.emoji);
+    return { added: true };
+  }
+
+  const target = db
+    .prepare("SELECT 1 FROM replies WHERE id = ?")
+    .get(input.targetId);
+  if (!target) throw new Error("TARGET_NOT_FOUND");
+
+  const exists = db
+    .prepare(
+      `SELECT 1 FROM reply_reactions
+       WHERE reply_id = ? AND user_id = ? AND emoji = ?`
+    )
+    .get(input.targetId, input.userId, input.emoji);
+  if (exists) {
+    db.prepare(
+      `DELETE FROM reply_reactions
+       WHERE reply_id = ? AND user_id = ? AND emoji = ?`
+    ).run(input.targetId, input.userId, input.emoji);
+    return { added: false };
+  }
+  db.prepare(
+    `INSERT INTO reply_reactions (reply_id, user_id, emoji)
+     VALUES (?, ?, ?)`
+  ).run(input.targetId, input.userId, input.emoji);
+  return { added: true };
 }
 
 export async function toggleBookmark(input: {
   userId: string;
   threadId: string;
 }): Promise<{ added: boolean }> {
-  return withWriteLock(async () => {
-    const store = await read();
-    const i = store.bookmarks.findIndex(
-      (b) => b.userId === input.userId && b.threadId === input.threadId
+  const exists = db
+    .prepare("SELECT 1 FROM bookmarks WHERE user_id = ? AND thread_id = ?")
+    .get(input.userId, input.threadId);
+  if (exists) {
+    db.prepare("DELETE FROM bookmarks WHERE user_id = ? AND thread_id = ?").run(
+      input.userId,
+      input.threadId
     );
-    let added = false;
-    if (i >= 0) {
-      store.bookmarks.splice(i, 1);
-    } else {
-      store.bookmarks.push({
-        userId: input.userId,
-        threadId: input.threadId,
-        createdAt: new Date().toISOString(),
-      });
-      added = true;
-    }
-    await write(store);
-    return { added };
-  });
+    return { added: false };
+  }
+  db.prepare(
+    "INSERT INTO bookmarks (user_id, thread_id, created_at) VALUES (?, ?, ?)"
+  ).run(input.userId, input.threadId, new Date().toISOString());
+  return { added: true };
 }
 
 export async function toggleFollow(input: {
   userId: string;
   threadId: string;
 }): Promise<{ added: boolean }> {
-  return withWriteLock(async () => {
-    const store = await read();
-    const i = store.follows.findIndex(
-      (f) => f.userId === input.userId && f.threadId === input.threadId
+  const exists = db
+    .prepare("SELECT 1 FROM follows WHERE user_id = ? AND thread_id = ?")
+    .get(input.userId, input.threadId);
+  if (exists) {
+    db.prepare("DELETE FROM follows WHERE user_id = ? AND thread_id = ?").run(
+      input.userId,
+      input.threadId
     );
-    let added = false;
-    if (i >= 0) {
-      store.follows.splice(i, 1);
-    } else {
-      store.follows.push({
-        userId: input.userId,
-        threadId: input.threadId,
-        createdAt: new Date().toISOString(),
-      });
-      added = true;
-    }
-    await write(store);
-    return { added };
-  });
+    return { added: false };
+  }
+  db.prepare(
+    "INSERT INTO follows (user_id, thread_id, created_at) VALUES (?, ?, ?)"
+  ).run(input.userId, input.threadId, new Date().toISOString());
+  return { added: true };
 }
 
 export async function isBookmarked(userId: string, threadId: string) {
-  const store = await read();
-  return store.bookmarks.some(
-    (b) => b.userId === userId && b.threadId === threadId
+  return (
+    db
+      .prepare("SELECT 1 FROM bookmarks WHERE user_id = ? AND thread_id = ?")
+      .get(userId, threadId) != null
   );
 }
 
 export async function isFollowing(userId: string, threadId: string) {
-  const store = await read();
-  return store.follows.some(
-    (f) => f.userId === userId && f.threadId === threadId
+  return (
+    db
+      .prepare("SELECT 1 FROM follows WHERE user_id = ? AND thread_id = ?")
+      .get(userId, threadId) != null
   );
 }
 
@@ -532,44 +775,73 @@ export async function reactionsForUser(
   targetType: "thread" | "reply",
   targetId: string
 ): Promise<Set<ReactionEmoji>> {
-  const store = await read();
-  const target =
+  const rows =
     targetType === "thread"
-      ? store.threads.find((t) => t.id === targetId)
-      : store.replies.find((r) => r.id === targetId);
-  if (!target) return new Set();
-  return new Set(
-    target.reactions
-      .filter((r) => r.userId === userId)
-      .map((r) => r.emoji)
-  );
+      ? (db
+          .prepare(
+            "SELECT emoji FROM thread_reactions WHERE thread_id = ? AND user_id = ?"
+          )
+          .all(targetId, userId) as { emoji: string }[])
+      : (db
+          .prepare(
+            "SELECT emoji FROM reply_reactions WHERE reply_id = ? AND user_id = ?"
+          )
+          .all(targetId, userId) as { emoji: string }[]);
+  return new Set(rows.map((r) => r.emoji as ReactionEmoji));
 }
 
 export async function bookmarksForUser(userId: string): Promise<Bookmark[]> {
-  const store = await read();
-  return store.bookmarks
-    .filter((b) => b.userId === userId)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return (
+    db
+      .prepare(
+        `SELECT user_id, thread_id, created_at
+         FROM bookmarks
+         WHERE user_id = ?
+         ORDER BY created_at DESC`
+      )
+      .all(userId) as {
+      user_id: string;
+      thread_id: string;
+      created_at: string;
+    }[]
+  ).map((r) => ({
+    userId: r.user_id,
+    threadId: r.thread_id,
+    createdAt: r.created_at,
+  }));
 }
 
 export async function followsForUser(userId: string): Promise<Follow[]> {
-  const store = await read();
-  return store.follows.filter((f) => f.userId === userId);
+  return (
+    db
+      .prepare("SELECT user_id, thread_id, created_at FROM follows WHERE user_id = ?")
+      .all(userId) as {
+      user_id: string;
+      thread_id: string;
+      created_at: string;
+    }[]
+  ).map((r) => ({
+    userId: r.user_id,
+    threadId: r.thread_id,
+    createdAt: r.created_at,
+  }));
 }
 
 export async function repliesByUser(
   userId: string,
   limit = 25
 ): Promise<ReplyView[]> {
-  const store = await read();
-  const mine = store.replies
-    .filter((r) => r.authorId === userId)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, limit);
+  const rows = db
+    .prepare(
+      "SELECT * FROM replies WHERE author_id = ? ORDER BY created_at DESC LIMIT ?"
+    )
+    .all(userId, limit) as ReplyRow[];
   const cache = new Map<string, Author | null>();
+
   return Promise.all(
-    mine.map(async (r) => {
-      const author = await hydrateAuthor(store, r.authorId, cache);
+    rows.map(async (row) => {
+      const r = rowToReply(row);
+      const author = await hydrateAuthor(r.authorId, cache);
       const counts = reactionCounts(r.reactions);
       return {
         ...r,
@@ -582,57 +854,39 @@ export async function repliesByUser(
 }
 
 export async function incrementViewCount(threadId: string) {
-  return withWriteLock(async () => {
-    const store = await read();
-    const t = store.threads.find((x) => x.id === threadId);
-    if (!t) return;
-    t.viewCount += 1;
-    await write(store);
-  });
+  db.prepare("UPDATE threads SET view_count = view_count + 1 WHERE id = ?").run(
+    threadId
+  );
 }
 
-// Moderation
 export async function setPinned(threadId: string, pinned: boolean) {
-  return withWriteLock(async () => {
-    const store = await read();
-    const t = store.threads.find((x) => x.id === threadId);
-    if (!t) throw new Error("THREAD_NOT_FOUND");
-    t.isPinned = pinned;
-    await write(store);
-  });
+  const result = db
+    .prepare("UPDATE threads SET is_pinned = ? WHERE id = ?")
+    .run(pinned ? 1 : 0, threadId);
+  if (result.changes === 0) throw new Error("THREAD_NOT_FOUND");
 }
 
 export async function setLocked(threadId: string, locked: boolean) {
-  return withWriteLock(async () => {
-    const store = await read();
-    const t = store.threads.find((x) => x.id === threadId);
-    if (!t) throw new Error("THREAD_NOT_FOUND");
-    t.isLocked = locked;
-    await write(store);
-  });
+  const result = db
+    .prepare("UPDATE threads SET is_locked = ? WHERE id = ?")
+    .run(locked ? 1 : 0, threadId);
+  if (result.changes === 0) throw new Error("THREAD_NOT_FOUND");
 }
 
 export async function deleteThread(threadId: string, requesterId: string) {
-  return withWriteLock(async () => {
-    const store = await read();
-    const t = store.threads.find((x) => x.id === threadId);
-    if (!t) return;
-    if (t.authorId !== requesterId) throw new Error("FORBIDDEN");
-    store.threads = store.threads.filter((x) => x.id !== threadId);
-    store.replies = store.replies.filter((r) => r.threadId !== threadId);
-    store.bookmarks = store.bookmarks.filter((b) => b.threadId !== threadId);
-    store.follows = store.follows.filter((f) => f.threadId !== threadId);
-    await write(store);
-  });
+  const t = db
+    .prepare("SELECT author_id FROM threads WHERE id = ?")
+    .get(threadId) as { author_id: string } | undefined;
+  if (!t) return;
+  if (t.author_id !== requesterId) throw new Error("FORBIDDEN");
+  db.prepare("DELETE FROM threads WHERE id = ?").run(threadId);
 }
 
 export async function deleteReply(replyId: string, requesterId: string) {
-  return withWriteLock(async () => {
-    const store = await read();
-    const r = store.replies.find((x) => x.id === replyId);
-    if (!r) return;
-    if (r.authorId !== requesterId) throw new Error("FORBIDDEN");
-    store.replies = store.replies.filter((x) => x.id !== replyId);
-    await write(store);
-  });
+  const r = db
+    .prepare("SELECT author_id FROM replies WHERE id = ?")
+    .get(replyId) as { author_id: string } | undefined;
+  if (!r) return;
+  if (r.author_id !== requesterId) throw new Error("FORBIDDEN");
+  db.prepare("DELETE FROM replies WHERE id = ?").run(replyId);
 }
