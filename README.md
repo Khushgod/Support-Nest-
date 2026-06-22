@@ -69,6 +69,7 @@ Set these in `.env.local`. All have safe defaults — none are required to run.
 | `NCBI_API_KEY`      | *(unset)*                     | Optional ClinVar API key — raises rate limit from 3/sec to 10/sec           |
 | `RESEND_API_KEY`    | *(unset)*                     | Enables "Email me these results"; if unset, the endpoint returns 503        |
 | `RESEND_FROM`       | `noreply@genetranslate.local` | Envelope-from address used for outbound emails                              |
+| `SUPPORTNEST_DATA_DIR` | `.data` (relative to app root) | Directory for the local SQLite DB file used by the built-in forum/auth data |
 
 ## Data lifecycle (ephemeral by design)
 
@@ -84,6 +85,14 @@ or email addresses:
 - **Email addresses** submitted to `/api/send-email` are forwarded to the
   email provider and never persisted server-side or client-side after send
   (per spec §5.4).
+
+### Local database persistence
+The app stores its built-in forum/auth state in a local SQLite file at
+`SUPPORTNEST_DATA_DIR/sagenest.db`, defaulting to `.data/sagenest.db` under the
+project root. For EC2 deployment, set `SUPPORTNEST_DATA_DIR` to a persistent
+mount such as `/var/lib/geneTranslate` or `/mnt/data/geneTranslate` and make
+sure that mounted volume is preserved across instance restarts and redeploys.
+Do not rely on ephemeral instance storage for this path.
 
 ## Safety guarantees
 

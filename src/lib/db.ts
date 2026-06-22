@@ -4,6 +4,8 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 
+// Persist the SQLite database on disk. For EC2, set SUPPORTNEST_DATA_DIR to a
+// persistent mounted path such as /var/lib/geneTranslate or /mnt/data/geneTranslate.
 const DATA_DIR =
   process.env.SUPPORTNEST_DATA_DIR || path.join(process.cwd(), ".data");
 
