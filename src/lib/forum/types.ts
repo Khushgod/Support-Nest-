@@ -226,6 +226,8 @@ export type Thread = {
 };
 
 export type ForumSeedThreadInput = {
+  /** Stable, explicit thread id. Falls back to a positional id when omitted. */
+  seedId?: string;
   authorId: string;
   spaceId: SpaceId;
   title: string;

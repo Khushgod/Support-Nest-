@@ -6,6 +6,7 @@ import type {
 } from "./types";
 import { csvRowsToSeedThreads, type QuestionResponseCsvRow } from "./csv-import";
 import { normalizeForumTag } from "./format";
+import { THREAD_IDEA_SEEDS } from "./thread-ideas.generated";
 
 /**
  * Synthetic seed data so a freshly cloned/started instance has a forum that
@@ -24,6 +25,13 @@ export const SEED_USERS: Author[] = [
   { id: "seed-noor", displayName: "Noor", handle: "noor~", role: "parent" },
   { id: "seed-eli", displayName: "Eli", handle: "eli~", role: "neurodivergent_adult" },
   { id: "seed-leah", displayName: "Leah", handle: "leah~", role: "parent" },
+  { id: "seed-kavya", displayName: "Kavya", handle: "kavya~", role: "parent" },
+  { id: "seed-tara", displayName: "Tara", handle: "tara~", role: "parent" },
+  { id: "seed-nikhil", displayName: "Nikhil", handle: "nikhil~", role: "neurodivergent_adult" },
+  { id: "seed-arjun", displayName: "Arjun", handle: "arjun~", role: "neurodivergent_adult" },
+  { id: "seed-meera", displayName: "Meera", handle: "meera~", role: "teacher" },
+  { id: "seed-rohan", displayName: "Rohan", handle: "rohan~", role: "job_seeker" },
+  { id: "seed-divya", displayName: "Divya", handle: "divya~", role: "job_seeker" },
   { id: "seed-csv-workplace", displayName: "Workplace Guide", handle: "workplace-guide~", role: "moderator" },
   { id: "seed-csv-parenting", displayName: "Parenting Guide", handle: "parenting-guide~", role: "moderator" },
   { id: "seed-csv-mental-health", displayName: "Recovery Guide", handle: "recovery-guide~", role: "moderator" },
@@ -489,7 +497,341 @@ export const SEED_THREADS: Seed[] = [
       { authorId: "seed-sam", body: "Both feelings are real. Both get to exist at once. Take your time.", daysAgo: 12, reactions: { thoughtful: 4 } },
     ],
   },
+  // --- India-context threads adapted from the Moderator Playbook ---
+  // SPACE 1: First steps & introductions
+  {
+    authorId: "seed-kavya",
+    spaceId: "first-steps",
+    title: "Just got diagnosed — welcome to my chaos, send help (or just hi)",
+    body: "Hi from a tired parent (could just as easily be an ND adult). We finished the psych evaluation last week. Part of me feels relieved, part of me feels like I got handed a label when what I needed was actual help.\n\nIf you're here because you just got a diagnosis too — or you're only thinking about it — this is a no-judgment zone. No 'be positive', no 'at least it's not…'. Just space to say out loud what this means for you right now.\n\nDrop a hi if you're new. What just happened in your world that brought you here?",
+    daysAgo: 1,
+    tags: ["intro", "diagnosis"],
+    audienceTags: ["everyone"],
+    contentNotes: ["diagnosis"],
+    reactions: { hug: 14, care: 8, metoo: 9 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Welcome — really glad you said hi. That mix of relief and 'where's the actual help' is so common here, and naming it is the first real step. What feels like the most confusing part right now?", daysAgo: 1, reactions: { care: 5 } },
+      { authorId: "seed-eli", body: "The label-vs-help feeling hit me hard too. It does start to turn into a map, slowly. Glad you're here.", daysAgo: 1, reactions: { metoo: 4 } },
+    ],
+  },
+  {
+    authorId: "seed-tara",
+    spaceId: "first-steps",
+    title: "Diagnosis doesn't mean I failed — but why does it feel that way?",
+    body: "My kid got diagnosed last month. The first thing my mother-in-law said was 'where did we go wrong?' And then my own voice started up: where did I go wrong?\n\nIf you're wrestling with guilt right now — whether it's your diagnosis or your child's — you're not alone, and you're not broken.\n\nThis thread is for naming that guilt without letting it win. What's the story you're telling yourself about what this diagnosis says about you?",
+    daysAgo: 2,
+    tags: ["guilt", "diagnosis"],
+    audienceTags: ["parents"],
+    contentNotes: ["diagnosis", "grief"],
+    reactions: { hug: 16, care: 11, metoo: 7 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Thank you for naming this out loud. Notice the evidence in front of us: you're here, you're learning, you showed up the week after a hard diagnosis. That's already a different story than 'I failed.' What would you say to a friend in your exact position?", daysAgo: 2, reactions: { care: 8, thoughtful: 4 } },
+      { authorId: "seed-noor", body: "The MIL line nearly broke me too. It got quieter once I stopped trying to win the argument and just said 'this isn't about blame, it's about helping him.'", daysAgo: 2, reactions: { agree: 5 } },
+    ],
+  },
+  {
+    authorId: "seed-nikhil",
+    spaceId: "first-steps",
+    title: "First steps after diagnosis — what actually helped",
+    body: "Real talk: the psych handed me a three-page report and sent me on my way. Then I spiraled, Googling for three days straight.\n\nIf you're past that first-week chaos, what's one thing that made it feel less impossible? A resource, a conversation, a single realization that actually landed?\n\nNot toxic positivity. Just real things that helped.",
+    daysAgo: 4,
+    tags: ["first-steps"],
+    audienceTags: ["everyone"],
+    contentNotes: ["diagnosis"],
+    reactions: { helpful: 13, thanks: 6 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Love this — let's build a list the next newly-diagnosed person can lean on. To start us off: what's the first thing that helped you stop spiraling, even a little?", daysAgo: 4, reactions: { helpful: 5 } },
+      { authorId: "seed-aarti", body: "Closing every tab and finding one community where people talked like humans. That was it for me.", daysAgo: 4, reactions: { agree: 7, thanks: 3 } },
+    ],
+  },
+  // SPACE 2: Parenting little ones (0–8)
+  {
+    authorId: "seed-kavya",
+    spaceId: "parenting-littles",
+    title: "Starting school is sensory chaos — and the school calls it a behavior problem",
+    body: "My 6yo melts down every single morning before school. Not because she doesn't want to go — it's the transition. Home to uniform to car to a crowded classroom in 20 minutes, and she's fully dysregulated by breakfast.\n\nWe've tried checklists, social stories, all of it. But nobody at school sees it as regulation — they see a behavior problem.\n\nIf your little one struggles with transitions or sensory stuff at school, what's actually helped? And how do you get a school to offer accommodations when they act like you're asking for the moon?",
+    daysAgo: 3,
+    tags: ["school", "transitions", "sensory"],
+    audienceTags: ["parents"],
+    contentNotes: ["school-stress", "meltdown"],
+    reactions: { metoo: 14, helpful: 9 },
+    replies: [
+      { authorId: "seed-csv-community", body: "This is such a real one — the morning transition tax is invisible to everyone but you. Pinning this for the practical replies. For folks who've been here: what one change made mornings even slightly softer?", daysAgo: 3, reactions: { care: 6 } },
+      { authorId: "seed-ren", body: "Front-loading everything the night before (uniform on the chair, bag packed, shoes by the door) cut our morning demands in half. Fewer decisions before she's even awake.", daysAgo: 3, reactions: { helpful: 11, agree: 4 } },
+    ],
+  },
+  {
+    authorId: "seed-tara",
+    spaceId: "parenting-littles",
+    title: "Early intervention is ₹15,000 a month — how is anyone affording this?",
+    body: "Just got quoted ₹15,000/month for speech plus OT. That's half my grocery budget. The psych says early intervention is critical and I believe her — but I also believe in paying rent.\n\nIf you're navigating therapy costs right now, or you found an alternative that actually works, honest question: how are you making it work? Subsidized programs? Government clinics? Things you do at home that genuinely help?\n\nNot judging anyone's choices. Just honesty about what it costs to be a neurodivergent family in India.",
+    daysAgo: 5,
+    tags: ["therapy-cost", "early-intervention", "india"],
+    audienceTags: ["parents"],
+    reactions: { metoo: 18, helpful: 7, hug: 9 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Thank you for saying the quiet part out loud — the cost is real and 'just find cheaper therapy' helps no one. Let's crowdsource honestly: subsidized clinics, NGO programs, district early-intervention centers, anything by city. Where are you based?", daysAgo: 5, reactions: { thanks: 8 } },
+      { authorId: "seed-noor", body: "Our district hospital had an OT at a fraction of private rates — long wait, but real. Also a local parent WhatsApp group shares which NGOs run sliding-scale sessions. Ask around more than you'd think to.", daysAgo: 5, reactions: { helpful: 13 } },
+    ],
+  },
+  {
+    authorId: "seed-ren",
+    spaceId: "parenting-littles",
+    title: "Sensory strategies that work for OUR kid (not the generic advice)",
+    body: "My son hates the standard fidget toys. He's happiest jumping off the bed or organizing his toys by color for 45 minutes.\n\nI've read a million generic 'sensory diet' posts and they all feel written for some other kid.\n\nWhat sensory input or routine actually works for your child? The weird, specific, doesn't-fit-the-textbook stuff?",
+    daysAgo: 7,
+    tags: ["sensory", "daily-life"],
+    audienceTags: ["parents"],
+    reactions: { helpful: 12, agree: 8 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Yes — 'jumps off the bed for 45 minutes' is way better intel than 'provide proprioceptive input.' Drop your kid's specific weird-that-works thing; specificity is the gift here.", daysAgo: 7, reactions: { helpful: 6 } },
+      { authorId: "seed-leah", body: "Mine needs deep pressure she can control — a heavy cushion pile she burrows under after school. We call it the 'reset cave.'", daysAgo: 7, reactions: { helpful: 9, care: 3 } },
+    ],
+  },
+  // SPACE 3: Tweens & teens (9–18)
+  {
+    authorId: "seed-leah",
+    spaceId: "tweens-teens",
+    title: "Board exams + neurodivergence — how do we actually do this?",
+    body: "My 10th grader is genuinely smart. But board exams are a sensory and executive-function nightmare: three hours of sitting still, silence, time pressure = maximum ADHD. The school says 'no extra time allowed' (there's actually a law for this — they just don't know it).\n\nIf your teen is facing CBSE/ICSE/State boards: are you pushing for accommodations like a scribe, extra time, or separate invigilation? How do you study with their brain instead of against it? And what's your sanity plan for the year?\n\n('Just focus' is not a strategy.)",
+    daysAgo: 6,
+    tags: ["board-exams", "accommodations", "rpwd", "india"],
+    audienceTags: ["parents"],
+    contentNotes: ["school-stress", "anxiety"],
+    reactions: { metoo: 11, helpful: 15 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Pinning this — it saves families months of fighting. Quick anchor: under the RPWD Act, candidates with disabilities can request accommodations like extra time and a scribe for board exams; boards have a process even when school staff say 'we've never done it.' For those who've won accommodations: what did the written request look like?", daysAgo: 6, reactions: { helpful: 18, thanks: 6 } },
+      { authorId: "seed-priya", body: "Teacher here. Put the request in writing, addressed to the school AND the board, with the diagnostic report attached. 'We've never done it' is not the same as 'it's not allowed.' Document everything.", daysAgo: 6, reactions: { helpful: 12, agree: 5 } },
+    ],
+  },
+  {
+    authorId: "seed-leah",
+    spaceId: "tweens-teens",
+    title: "My teen is lonely (and doesn't know how to fix it)",
+    body: "My 13yo is kind, funny, has niche interests — and zero close friends. Not because they're unkind, the opposite. They just miss social cues, don't catch jokes, struggle with the unspoken rules of being a teen.\n\nI watch them sit alone at lunch and it destroys me.\n\nIf your teen has struggled with friendship: is it social skills they need, or just different peers? Have you found clubs or online communities where they actually fit? And how do you support them without making it worse?",
+    daysAgo: 8,
+    tags: ["friendship", "social-skills"],
+    audienceTags: ["parents"],
+    contentNotes: ["rejection"],
+    reactions: { hug: 13, metoo: 10 },
+    replies: [
+      { authorId: "seed-csv-community", body: "This one aches — both the parent's helplessness and the teen's isolation are real. Often it's 'different peers' more than 'broken skills.' For folks further along: where did your teen finally find their people?", daysAgo: 8, reactions: { care: 7 } },
+      { authorId: "seed-aarti", body: "As the kid who sat alone: interest-based groups saved me, not 'friendship coaching.' A coding club, a D&D table, anything where the activity carries the socializing. Shared focus beats forced small talk.", daysAgo: 8, reactions: { thoughtful: 14, agree: 6 } },
+    ],
+  },
+  {
+    authorId: "seed-noor",
+    spaceId: "tweens-teens",
+    title: "My teen just realized they've been masking for years — now what?",
+    body: "My 14yo told me: 'I act normal at school but I'm exhausted.' They didn't use the word masking, but that's exactly it. Years of pretending to focus, sit still, be quiet — and now they're burnt out and don't know who they actually are.\n\nWhere I'm stuck as a parent: do I celebrate that they're finally honest about the exhaustion? Do I help them unmask and risk social fallout at school? How do I support identity-building while they're still inside a rigid system?\n\nIf you've been through this with your teen — or you were that teen — what helped?",
+    daysAgo: 9,
+    tags: ["masking", "identity", "burnout"],
+    audienceTags: ["parents"],
+    contentNotes: ["burnout"],
+    reactions: { metoo: 12, thoughtful: 11, hug: 7 },
+    replies: [
+      { authorId: "seed-csv-community", body: "First — that your teen told you this means you're a safe place, which is huge. Masking is real and exhausting, and they have a right to be themselves. What does 'rest from performing' look like for them at home?", daysAgo: 9, reactions: { care: 8 } },
+      { authorId: "seed-sam", body: "Unmasked at home first, masked-by-choice at school while it's necessary — that two-speed approach kept me safe AND let me breathe somewhere. They don't have to drop the whole mask everywhere at once.", daysAgo: 9, reactions: { thoughtful: 13, metoo: 5 } },
+    ],
+  },
+  {
+    authorId: "seed-kavya",
+    spaceId: "tweens-teens",
+    title: "My teen thinks they're ADHD — everyone else says she's 'fine'",
+    body: "My 16yo daughter is convinced she's ADHD. School says she's fine — good grades, quiet, follows rules. I assumed she was just shy and anxious.\n\nThen I read her diary: exhausted, can't start homework, overthinking every social interaction, sleeping three hours.\n\nWhat if she's right and we're missing it because she masks at school? Girls get missed constantly. If you've fought for a diagnosis when people said 'but she seems fine,' what changed their minds — and how do we actually listen to our teens about their own experience?",
+    daysAgo: 11,
+    tags: ["gender-bias", "masking", "diagnosis"],
+    audienceTags: ["parents"],
+    contentNotes: ["diagnosis", "anxiety"],
+    reactions: { metoo: 9, helpful: 10 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Worth naming plainly: girls are routinely missed because they mask and because 'quiet and compliant' hides the struggle. 'Good grades' is not the same as 'okay.' Your daughter's self-knowledge is real data. For those who pushed past 'she seems fine' — what got the assessment moving?", daysAgo: 11, reactions: { agree: 9, helpful: 6 } },
+      { authorId: "seed-aarti", body: "Late-diagnosed woman here. The diary is the evidence. We mask hardest where we're watched most. Take her seriously — being believed by a parent is the thing I needed most at 16.", daysAgo: 11, reactions: { care: 7, thoughtful: 5 } },
+    ],
+  },
+  // SPACE 4: Adults — workplace & life
+  {
+    authorId: "seed-arjun",
+    spaceId: "adults",
+    title: "Do I tell them about my diagnosis? Navigating work + ADHD/autism",
+    body: "Diagnosed at 32. After ten years in corporate, I finally understand why every job felt like drowning.\n\nNow the choice: do I tell my current employer and request accommodations, or keep masking and risk another burnout? People say 'be honest,' but I've also read a hundred stories of people getting fired or passed over after disclosing. In India, disability discrimination is illegal in theory.\n\nIf you've disclosed at work: did you stay at that company? What accommodations actually helped? Was it worth it, or do you regret it?",
+    daysAgo: 2,
+    tags: ["disclosure", "work", "accommodations"],
+    audienceTags: ["nd_adults"],
+    contentNotes: ["diagnosis"],
+    reactions: { metoo: 15, helpful: 9 },
+    replies: [
+      { authorId: "seed-csv-community", body: "High-stakes, and there's no single right answer — disclosing and protecting yourself are both valid. One thing that helps: you can often request the change you need ('I do my best work with written briefs') without leading with a diagnosis. For those who disclosed in India — what did you test about the culture first?", daysAgo: 2, reactions: { helpful: 11, thoughtful: 5 } },
+      { authorId: "seed-aarti", body: "I disclosed and it went fine — but only after I watched how my manager talked about other people's needs first. Test the culture before you trust it with your label.", daysAgo: 2, reactions: { agree: 8 } },
+    ],
+  },
+  {
+    authorId: "seed-nikhil",
+    spaceId: "adults",
+    title: "Explaining job-hopping without outing myself",
+    body: "Six jobs in eight years. Each time burnout hits hard, then I leave. The interviewer sees 'job-hopper, can't commit, red flag.' The reality was undiagnosed ADHD and burnout from masking.\n\nNow that I have a diagnosis I want to reframe it — but 'I had a mental health crisis' feels risky and 'it wasn't right for my brain' sounds weird.\n\nIf you're rebuilding your story after burnout cycles, how are you telling it? And how do you find work that doesn't need eight hours of masking a day?",
+    daysAgo: 4,
+    tags: ["job-hopping", "burnout", "resume"],
+    audienceTags: ["nd_adults"],
+    contentNotes: ["burnout"],
+    reactions: { metoo: 13, helpful: 8 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Job-hopping reads as a flaw, but it's often useful data about which conditions deplete you. A calm framing that's landed for people: 'I learned a lot about the environments where I do consistent work, and I'm looking for that fit now.' What's the pattern underneath your exits?", daysAgo: 4, reactions: { helpful: 12, thoughtful: 4 } },
+      { authorId: "seed-sam", body: "I stopped apologizing for the gaps and started naming what I learned: I need written priorities and fewer meetings. Saying it as a work-system need, not a confession, changed the whole interview.", daysAgo: 4, reactions: { agree: 7 } },
+    ],
+  },
+  {
+    authorId: "seed-aarti",
+    spaceId: "adults",
+    title: "Building a career around my brain, not against it",
+    body: "I keep getting told I should be in tech or data because 'ND people are good at that.' But I hate sitting at a screen eight hours. I thrive on variety, human connection, solving problems in the moment.\n\nSo I'm building something different — freelance consulting. It's terrifying and unstable, but it fits my brain.\n\nIf you've found or built work that aligns with how your brain actually works (not despite it): what's the work, how did you get there, and what's the trade-off — money, stability, freedom?",
+    daysAgo: 6,
+    tags: ["work", "strengths", "freelance"],
+    audienceTags: ["nd_adults"],
+    reactions: { helpful: 11, agree: 9, care: 4 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Love this — there's no single 'ND-friendly job,' only the fit between your wiring and the work. Let's collect a range, not just 'tech is best.' What trade-off did you accept to get the fit you needed?", daysAgo: 6, reactions: { thoughtful: 6 } },
+      { authorId: "seed-eli", body: "Went from corporate to a hands-on trade with variety and movement. Less prestige, way less masking, and I stopped dreading Mondays. Worth every rupee I 'lost.'", daysAgo: 6, reactions: { agree: 8, care: 3 } },
+    ],
+  },
+  // SPACE 5: Educators' lounge
+  {
+    authorId: "seed-meera",
+    spaceId: "educators",
+    title: "I have a student I don't know how to help",
+    body: "I have a 7th grader who can't sit still — constant fidgeting, calling out, interrupting. The parents say ADHD; honestly I've been seeing a discipline problem. I've tried seating changes, behavior charts, detention. Nothing sticks.\n\nHonest question: am I missing something? Is this a neurodivergence thing I need to approach differently? And if so — I have 40 other kids and zero resources. How do I actually do this?\n\nTeachers who've figured this out, help me understand.",
+    daysAgo: 3,
+    tags: ["classroom", "behavior", "dysregulation"],
+    audienceTags: ["teachers"],
+    contentNotes: ["school-stress"],
+    reactions: { helpful: 14, thanks: 5 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Thank you for asking instead of writing the kid off — the constraints you're under (40 kids, no support) are real, not excuses. A reframe that helps: a lot of 'won't sit still' is can't-yet-regulate, not won't-behave. Punishment rarely touches dysregulation. What's one low-cost change you could try this week?", daysAgo: 3, reactions: { helpful: 9, thoughtful: 4 } },
+      { authorId: "seed-devon", body: "Built-in movement (a class job, handing out papers, a 60-second stretch between tasks) discharges that energy without singling anyone out. Detention adds demand to a kid already over capacity — it backfires every time for mine.", daysAgo: 3, reactions: { helpful: 13, agree: 6 } },
+    ],
+  },
+  {
+    authorId: "seed-priya",
+    spaceId: "educators",
+    title: "Legal accommodations vs. the practical reality of an Indian school",
+    body: "A parent asked for separate invigilation and extra time for board exams. I said 'I'll look into it.'\n\nReality: our school has never done this. We don't have the infrastructure, and no one at the board office seems to know the law allows it.\n\nSo do I fight the system for one student? Tell the parent we can't accommodate? Ignore the request? If you're a school leader, teacher, or parent who's navigated this — what's the path forward that doesn't require hiring lawyers?",
+    daysAgo: 7,
+    tags: ["rpwd", "rte", "accommodations", "india", "legal"],
+    audienceTags: ["teachers"],
+    contentNotes: ["school-stress"],
+    reactions: { helpful: 12, thoughtful: 7 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Pinning the legal anchor: the RPWD Act (2016) and exam-board guidelines do provide for accommodations like extra time, scribes, and separate rooms — 'we've never done it' isn't the same as 'we can't.' The realistic first step is a written request to the board citing the provision. Has anyone here set this up at a school for the first time?", daysAgo: 7, reactions: { helpful: 15, thanks: 5 } },
+      { authorId: "seed-devon", body: "We did it for the first time last year. It was paperwork and persistence, not lawyers — the board had a process buried in their circulars once we asked the right office. Document every email.", daysAgo: 7, reactions: { helpful: 10, agree: 4 } },
+    ],
+  },
+  {
+    authorId: "seed-meera",
+    spaceId: "educators",
+    title: "Small strategies that actually work in a packed classroom",
+    body: "Eight years teaching, and after a few ND students I realized: changing my approach changes everything. Small things that work:\n\n- Movement breaks built into the lesson, not as a reward\n- Fidget tools on desks, not treated as contraband\n- Instructions given in writing and spoken\n- Timers for transitions\n- Celebrating effort, not just correctness\n\nNone of this needs a budget — just intention. What's one small thing you do that costs nothing but makes a huge difference?",
+    daysAgo: 10,
+    tags: ["classroom", "low-resource"],
+    audienceTags: ["teachers"],
+    reactions: { helpful: 17, thanks: 8, agree: 6 },
+    replies: [
+      { authorId: "seed-csv-community", body: "This is gold — and the best part is ND-friendly is just better-for-everyone teaching. Let's build the no-budget list together. What's your one zero-cost move?", daysAgo: 10, reactions: { helpful: 7 } },
+      { authorId: "seed-priya", body: "Visual agenda on the board every day, ticked off as we go. Costs nothing, and the whole class settles when they can see the shape of the lesson.", daysAgo: 10, reactions: { helpful: 11, agree: 5 } },
+    ],
+  },
+  // SPACE 6: Healthcare & genetics
+  {
+    authorId: "seed-noor",
+    spaceId: "healthcare",
+    title: "How do you find a psych who actually gets it? (India)",
+    body: "I've called eight doctors. One said ADHD doesn't exist in girls. One wanted to medicate immediately. One told me to just 'parent better.' I'm exhausted and we're no closer to a diagnosis.\n\nIf you've found a good clinician — one who listens, doesn't pathologize, knows current diagnostic criteria — help a parent out: how did you find them? What should I ask to vet someone before booking? Red flags? And rough cost in your city?\n\n(Please include your city/region so others can use your recs.)",
+    daysAgo: 5,
+    tags: ["clinician", "diagnosis", "india"],
+    audienceTags: ["everyone"],
+    contentNotes: ["medical", "diagnosis"],
+    reactions: { helpful: 13, metoo: 8 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Eight calls like that is genuinely demoralizing — I'm sorry. Let's build a city-by-city list of clinicians who do this well. A good assessment usually means: full history, more than a 15-minute chat, talks about strengths and challenges, and doesn't rush to a single label. What city are you in?", daysAgo: 5, reactions: { thanks: 7, care: 5 } },
+      { authorId: "seed-jordan", body: "Vetting question that saved me: 'How do you assess in girls and women specifically?' A blank pause is your answer. Good ones light up and talk about masking.", daysAgo: 5, reactions: { helpful: 12 } },
+    ],
+  },
+  {
+    authorId: "seed-kavya",
+    spaceId: "healthcare",
+    title: "The clinician recommended medication and I'm terrified",
+    body: "The doctor says ADHD medication could help with focus and regulation. But my mom says it's addictive, a Facebook group says it's overprescribed to control kids, and a Reddit thread says it ruined someone's life.\n\nI trust the clinician's judgment. I'm also terrified of getting this wrong.\n\nIf you've gone the medication route — for yourself or your child — what was your actual experience? Not scaremongering, not toxic positivity. Just real. What should I know before we start?",
+    daysAgo: 8,
+    tags: ["medication", "india"],
+    audienceTags: ["parents"],
+    contentNotes: ["medical"],
+    reactions: { metoo: 10, helpful: 9, hug: 5 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Totally fair to be scared — and the noise online makes it worse. Medication is one tool among several, started low and monitored, not a permanent verdict. We can share real experiences here, but the dosing conversation belongs with your prescriber. For those who tried it: what surprised you, good or bad?", daysAgo: 8, reactions: { helpful: 11, thanks: 4 } },
+      { authorId: "seed-eli", body: "For me it wasn't a personality change, just turning the background noise down a notch. We started tiny and adjusted. The scary stories online were nothing like my actual experience — but it's individual, so go slow with your doctor.", daysAgo: 8, reactions: { helpful: 9, care: 3 } },
+    ],
+  },
+  {
+    authorId: "seed-arjun",
+    spaceId: "healthcare",
+    title: "My kid's diagnosis, and suddenly 'oh… that's me too'",
+    body: "My kid got diagnosed. Now I'm reading about ADHD in adults and going 'oh.' My whole childhood makes sense — the job struggles, the relationships, the organization chaos. It all clicks.\n\nThe parent group says 'you're not alone, lots of parents discover they're ND too.' But I also don't want to armchair-diagnose myself.\n\nIf you've gone down this road (kid's diagnosis → realizing you might be ND too): what helped? Did you seek your own assessment? Did it change how you show up for your kid's journey?",
+    daysAgo: 12,
+    tags: ["genetics", "late-diagnosis"],
+    audienceTags: ["everyone"],
+    contentNotes: ["medical", "diagnosis"],
+    reactions: { metoo: 14, care: 7 },
+    replies: [
+      { authorId: "seed-csv-community", body: "This 'oh' moment is one of the most common stories in this whole community. Recognizing yourself in your kid's diagnosis isn't self-pathologizing — it's new information about an old story. Did understanding yourself change how you parent the journey?", daysAgo: 12, reactions: { thoughtful: 8, care: 5 } },
+      { authorId: "seed-aarti", body: "Getting my own assessment after my nephew's changed everything — I stopped parenting from shame and started from understanding. Even if you never get a formal label, the self-compassion alone is worth it.", daysAgo: 12, reactions: { care: 9, agree: 4 } },
+    ],
+  },
+  // SPACE 7: Job seekers
+  {
+    authorId: "seed-rohan",
+    spaceId: "job seekers",
+    title: "Resume gaps that don't sound like excuses",
+    body: "I had a breakdown at my last job and left. Now I'm back on the market. The honest version is 'that role wasn't sustainable for my mental health.' The scary version is what the interviewer hears: 'unstable, will quit again.'\n\nI'm rebuilding my resume and my story, but I don't want to lie, over-share my mental health, or sound like a liability.\n\nHow have you handled employment gaps in India's job market? What version of your story actually landed you an interview?",
+    daysAgo: 3,
+    tags: ["resume-gaps", "interview"],
+    audienceTags: ["job_seekers"],
+    contentNotes: ["unemployment", "burnout"],
+    reactions: { metoo: 12, helpful: 8 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Gaps are so common and so survivable — burnout is real, not a character flaw. A framing people have landed interviews with: 'I took intentional time to reset and build skills, and I'm ready for a structured role.' Then pivot fast to proof. What were you doing during the gap that we can frame as growth?", daysAgo: 3, reactions: { helpful: 13, thanks: 5 } },
+      { authorId: "seed-divya", body: "I named the gap in one calm sentence and moved straight to a project I'd built. Interviewers followed my lead — when I didn't treat it as shameful, neither did they.", daysAgo: 3, reactions: { agree: 7 } },
+    ],
+  },
+  {
+    authorId: "seed-divya",
+    spaceId: "job seekers",
+    title: "Actually getting through interviews when your brain works differently",
+    body: "I'm great at my job and terrible at selling myself in an interview. I blank on pre-rehearsed stories, get overwhelmed by group assessments, and fixate on one hard question while losing the thread of everything else.\n\nNeurodivergent-friendly interview strategies would be amazing. Also — companies like Atypical Advantage and Nagarro run neuro-affirming hiring. Has anyone applied there, and what was different?\n\nWhat's one interview hack that's actually worked for you?",
+    daysAgo: 6,
+    tags: ["interview", "atypical-advantage"],
+    audienceTags: ["job_seekers"],
+    contentNotes: ["anxiety"],
+    reactions: { helpful: 11, metoo: 9 },
+    replies: [
+      { authorId: "seed-csv-community", body: "Interview anxiety is not a measure of how good you'd be at the job. Practical hacks welcome here — and yes, neuro-affirming hiring (Atypical Advantage, Nagarro's TestingPro, some EY/SAP tracks) genuinely runs differently: clearer expectations, less performance-under-pressure. What's the one thing that trips you up most so we can troubleshoot it?", daysAgo: 6, reactions: { helpful: 10, thanks: 4 } },
+      { authorId: "seed-arjun", body: "Asking to see questions in writing, or for a second to jot a keyword before answering, stopped me blanking. Good interviewers don't blink at it. The neuro-affirming processes I tried actually offered it upfront.", daysAgo: 6, reactions: { helpful: 9, agree: 5 } },
+    ],
+  },
+  {
+    authorId: "seed-rohan",
+    spaceId: "job seekers",
+    title: "What actually makes a role (or company) neurodivergent-friendly?",
+    body: "After five jobs where I burnt out, I finally found one that works. Not because it's easy — it's not. But:\n\n- Flexible deadlines (not everything is urgent)\n- Async is normal (I don't have to perform focus eight hours a day)\n- A manager who gets it (judges results, not how I work)\n- Remote option (no sensory-overload commute)\n- Real mental-health days, not frowned upon\n\nIt's rare, but it exists. What's made a role actually sustainable for you? What's non-negotiable?",
+    daysAgo: 9,
+    tags: ["workplace", "remote", "accommodations"],
+    audienceTags: ["job_seekers"],
+    reactions: { helpful: 14, agree: 10, thanks: 5 },
+    replies: [
+      { authorId: "seed-csv-community", body: "This is the hopeful one — proof that sustainable roles exist. Let's name the green flags so the next person can look for them in a job description. What's your single non-negotiable?", daysAgo: 9, reactions: { thanks: 6 } },
+      { authorId: "seed-nikhil", body: "Async plus 'results not hours' is my non-negotiable now. The day a manager said 'I don't care when you do it, just keep me posted,' my whole nervous system unclenched.", daysAgo: 9, reactions: { agree: 8, care: 3 } },
+    ],
+  },
   ...CSV_SEED_THREADS,
+  ...THREAD_IDEA_SEEDS,
 ];
 
 export function buildSeedReplies(): {
@@ -503,9 +845,11 @@ export function buildSeedReplies(): {
 
   for (let i = 0; i < SEED_THREADS.length; i++) {
     const s = SEED_THREADS[i];
-    const tid = s.seedMetadata
-      ? `seed-csv-${normalizeForumTag(s.seedMetadata.theme)}-${s.seedMetadata.rank}`
-      : `seed-thread-${i + 1}`;
+    const tid =
+      s.seedId ??
+      (s.seedMetadata
+        ? `seed-csv-${normalizeForumTag(s.seedMetadata.theme)}-${s.seedMetadata.rank}`
+        : `seed-thread-${i + 1}`);
     const created = new Date(
       now - s.daysAgo * day + (s.minutesOffset ?? 0) * 60_000
     ).toISOString();

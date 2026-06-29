@@ -56,6 +56,43 @@ const SECTIONS: Section[] = [
       },
     ],
   },
+  {
+    heading: "Diagnosis & India's legal framework",
+    items: [
+      {
+        title: "Autism spectrum disorder: an Indian perspective",
+        desc: "ScienceDirect on how the RPWD Act recognizes ASD and frames the right to support and services.",
+        href: "https://www.sciencedirect.com/science/article/abs/pii/S0377123725002291",
+        format: "Article",
+        minutes: 8,
+      },
+    ],
+  },
+  {
+    heading: "India organizations & directories",
+    blurb:
+      "Established organizations for assessment, family support, and adult services. Verify current offerings before you rely on them.",
+    items: [
+      {
+        title: "Action for Autism (AFA)",
+        desc: "Delhi-based pioneer: early intervention, diagnosis, parent training, and vocational programs.",
+        href: "https://actionforautism.org",
+        format: "Reading list",
+      },
+      {
+        title: "India Autism Center (IAC)",
+        desc: "Kolkata: residential campus, adult vocational training, family guidance, and research.",
+        href: "https://indiaautismcenter.org",
+        format: "Reading list",
+      },
+      {
+        title: "Atypical Advantage",
+        desc: "India's largest inclusive employment platform for people with disabilities — job portal and corporate hiring.",
+        href: "https://atypicaladvantage.in",
+        format: "Reading list",
+      },
+    ],
+  },
 ];
 
 export default function HealthcareResources() {

@@ -45,3 +45,6 @@ next-env.d.ts
 
 # SupportNest local data store (encrypted vault + dev users.json)
 /.data/
+
+# MCP config — contains a secret API key, do not commit
+/.mcp.json

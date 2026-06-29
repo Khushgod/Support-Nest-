@@ -84,6 +84,40 @@ const SECTIONS: Section[] = [
       },
     ],
   },
+  {
+    heading: "IEP & accommodation toolkits",
+    blurb:
+      "Ready-to-adapt accommodation guidance from the Sachs Center.",
+    items: [
+      {
+        title: "IEP accommodations for ADHD",
+        desc: "Preferential seating, scheduled movement breaks, and visual supports — a practical menu.",
+        href: "https://sachscenter.com/iep-accommodations-for-adhd/",
+        format: "Article",
+        minutes: 7,
+      },
+      {
+        title: "IEP accommodations for autism",
+        desc: "Four pillars — sensory, communication, behavioral, environmental — for genuinely individualized plans.",
+        href: "https://sachscenter.com/iep-accommodations-for-autism/",
+        format: "Article",
+        minutes: 7,
+      },
+    ],
+  },
+  {
+    heading: "Facilitating ND-affirming spaces",
+    blurb:
+      "If you run a group, club, or community, a neurodiversity-affirming baseline for keeping it safe.",
+    items: [
+      {
+        title: "Neurodivergent-affirming community guidelines",
+        desc: "What to remove, encourage, and mentor toward — lived experience over toxic positivity, and no inspiration porn.",
+        href: "/community",
+        format: "Checklist",
+      },
+    ],
+  },
 ];
 
 export default function TeachersResources() {

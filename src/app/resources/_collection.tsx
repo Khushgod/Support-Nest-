@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, BookmarkPlus } from "lucide-react";
 import Shell from "@/components/supportnest/Shell";
 import PageHeader from "@/components/supportnest/PageHeader";
+import ResourceCard from "./ResourceCard";
 
 export type Resource = {
   title: string;
@@ -15,14 +15,6 @@ export type Section = {
   heading: string;
   blurb?: string;
   items: Resource[];
-};
-
-const FORMAT_STYLES: Record<Resource["format"], string> = {
-  Article: "bg-coral-100 text-coral-700",
-  Script: "bg-lavender-100 text-lavender-700",
-  Checklist: "bg-sun-100 text-sun-700",
-  Tool: "bg-cream-200 text-slate-700",
-  "Reading list": "bg-white border border-cream-200 text-slate-700",
 };
 
 export default function CollectionPage({
@@ -62,44 +54,7 @@ export default function CollectionPage({
             )}
             <ul className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {s.items.map((r) => (
-                <li
-                  key={r.title}
-                  className="group rounded-2xl border border-cream-200 bg-white p-5 hover:shadow-[var(--shadow-primary-card)] transition"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${FORMAT_STYLES[r.format]}`}
-                    >
-                      {r.format}
-                    </span>
-                    {r.minutes && (
-                      <span className="text-[11px] text-slate-500">
-                        {r.minutes} min
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="mt-3 text-sm font-semibold text-slate-900 leading-snug">
-                    {r.title}
-                  </h3>
-                  <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
-                    {r.desc}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <Link
-                      href={r.href}
-                      className="text-xs font-medium text-coral-600 hover:text-coral-700 inline-flex items-center gap-1"
-                    >
-                      Read <ArrowRight className="w-3 h-3" />
-                    </Link>
-                    <button
-                      type="button"
-                      className="text-xs text-slate-500 hover:text-slate-700 inline-flex items-center gap-1"
-                      aria-label={`Save ${r.title} to your shelf`}
-                    >
-                      <BookmarkPlus className="w-3.5 h-3.5" /> Save
-                    </button>
-                  </div>
-                </li>
+                <ResourceCard key={r.title} r={r} />
               ))}
             </ul>
           </div>

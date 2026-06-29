@@ -39,12 +39,15 @@ describe("forum store", () => {
     const workplace = await store.listThreads({
       spaceId: "job seekers",
       tag: "employment-gaps",
-      limit: 10,
+      limit: 50,
     });
-    expect(workplace.items).toHaveLength(1);
-    expect(workplace.items[0]).toMatchObject({
-      title:
-        "How do I explain employment gaps without making my ADHD or burnout sound like a liability?",
+    const csvWorkplace = workplace.items.find(
+      (t) =>
+        t.title ===
+        "How do I explain employment gaps without making my ADHD or burnout sound like a liability?"
+    );
+    expect(csvWorkplace).toBeDefined();
+    expect(csvWorkplace).toMatchObject({
       author: expect.objectContaining({ handle: "workplace-guide~" }),
       seedMetadata: expect.objectContaining({
         source: "question-response-csv",
@@ -52,18 +55,21 @@ describe("forum store", () => {
         rank: 1,
       }),
     });
-    expect(workplace.items[0].audienceTags).toContain("job_seekers");
-    expect(workplace.items[0].contentNotes).toContain("unemployment");
+    expect(csvWorkplace?.audienceTags).toContain("job_seekers");
+    expect(csvWorkplace?.contentNotes).toContain("unemployment");
 
     const school = await store.listThreads({
       spaceId: "educators",
       tag: "teacher-profile",
-      limit: 10,
+      limit: 50,
     });
-    expect(school.items).toHaveLength(1);
-    expect(school.items[0].title).toBe(
-      "What should I put in a one-page profile for my child's teacher?"
-    );
+    expect(
+      school.items.some(
+        (t) =>
+          t.title ===
+          "What should I put in a one-page profile for my child's teacher?"
+      )
+    ).toBe(true);
   });
 
   it("listSpaceStats covers every seeded space", async () => {
